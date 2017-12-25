@@ -1,0 +1,124 @@
+﻿<!-- Author: Cameron Block -->
+@using System;
+@using System.Collections.Generic;
+@using System.Configuration;
+
+@using AdHockey.Models;
+@using AdHockey.Repositories;
+
+@model Option
+
+@{
+    ViewBag.Title = "Manage Options";
+}
+
+@Scripts.Render("~/Scripts/jquery-ui-1.12.1.min.js")
+
+<link href='@Url.Content("~/Content/themes/base/jquery-ui.css")' rel="stylesheet" type="text/css" />
+
+<style>
+    /* Scroll bar for the sql text. */
+    .scroll-bar {
+        width: 300px;
+        height: 100px;
+        overflow: scroll;
+    }
+</style>
+
+<div class="jumbotron">
+    <h1>Manage Options</h1>
+    <p class="lead">Create a new Option. </p>
+</div>
+
+<div class="row">
+    <!-- Left side. -->
+    <div class="col-md-2">
+        <ul id="links">
+            <li><a href="@Url.Action("Index", "ManageBulkTemplate")">Manage Bulk Templates</a></li>
+            <li><a href="@Url.Action("Index", "ManageLimiterItem")">Manage Limiter Templates</a></li>
+            <li><a href="@Url.Action("Index", "ManageOption")">Template Item</a></li>
+            <li><a href="@Url.Action("Index", "ManageReport")">Manage Reports</a></li>
+            <li><a href="@Url.Action("Index", "ManageGroup")">Manage Groups</a></li>
+            <li><a href="@Url.Action("Index", "ManageUser")">Manage Users</a></li>
+            <li><a href="@Url.Action("Index", "Home")">AdHoc Report</a></li>
+        </ul>
+    </div>
+
+    <!-- Center. -->
+    <div class="col-md-5">
+        <div>
+            <h2>Manage Group</h2>
+            @using (Html.BeginForm("SubmitOption", "ManageOption", FormMethod.Post)) {
+                <form class="form-horizontal">
+                    <!-- Template Name. -->
+                    <div class="form-group">
+                        <label class="control-label col-sm-6">Template Name: </label>
+                        <div class="form-control-static col-sm-6">
+                            @Html.TextBoxFor(option => option.OptionValue, new { @class = "form-control" })
+                        </div>
+                    </div>
+
+                    <button id="btnSubmit" type="submit" class="btn btn-primary" value="SubmitOption">Submit</button>
+                </form>
+            }
+        </div>
+    </div>
+
+    <!-- Right Side. -->
+    <div class="col-md-5">
+        <h2>Available Template</h2>
+        <!-- Search Box Markup. -->
+        <div class="form-group">
+            <label class="control-label col-sm-2" for="txtTmpSearch">Search:</label>
+            <div class="col-sm-6">
+                @Html.TextBox("txtTmpSearch", null, new { @class = "form-control", @Value = (ViewBag.TemplateSearchStr != null ? ViewBag.TemplateSearchStr : "") })
+            </div>
+            <div class="col-sm-3 btn-group">
+                <button type="button" class="btn btn-secondary form-control" onclick="ExecuteSearch(this)">Search</button>
+            </div>
+        </div>
+        <button type="button" class="btn btn-secondary pull-right" onclick="location.href='@Url.Action("ClearSearch", "ManageOption")'">Clear Search</button>
+        <script type="text/javascript">
+            function ExecuteSearch(sender){
+                var value = $('#txtTmpSearch').val();
+                var url = '@Url.Action("ExecuteSearch", "ManageOption")' + '\\?searchStr=' + value;
+                window.location = url;
+            }
+            var availableTags = @using (OptionRepository repo = new OptionRepository()) {
+                repo.BeginTransaction();
+                List<String> optionNames = repo.GetOptionValues();
+                @(Html.Raw(Json.Encode(optionNames)));
+            };
+            $('#txtTmpSearch').autocomplete({
+                source: availableTags
+            });
+        </script>
+        <div id="tblOptions" class="height: 100px;overflow-y: scroll;">
+            @if (ViewBag.OptionPage != null) {
+                if (ViewBag.OptionPage.Count > 0) {
+                    <table id="tblOptions" class="table table-striped">
+                        <tr>
+                            <th>Option Value</th>
+                            <th>Remove</th>
+                        </tr>
+                        @foreach (Option option in ViewBag.OptionPage) {
+                            <tr>
+                                <td>@option.OptionValue</td>
+                                <td>
+                                    <button type="button" class="btn btn-danger" onclick="location.href='@Url.Action("RemoveOption", "ManageOption", new { optionId = option.OptionId })'">Remove</button>
+                                </td>
+                            </tr>
+                        }
+                    </table>
+                }
+            }
+        </div>
+        <div class="btn-group pull-right">
+            <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("TemplateFirstPage", "ManageOption")'">Begin</button>
+            <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("TemplatePreviousPage", "ManageOption")'">Previous</button>
+            <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("TemplateNextPage", "ManageOption")'">Next</button>
+            <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("TemplateLastPage", "ManageOption")'">Next</button>
+        </div>
+    </div>
+
+</div>

@@ -1,0 +1,127 @@
+﻿<!-- Author: Cameron Block -->
+@using System;
+@using System.Collections.Generic;
+@using System.Configuration;
+@using System.Linq;
+@using System.Collections;
+@using System.Web.Helpers;
+@using System.Runtime.Serialization;
+
+@using AdHockey.Models;
+@using AdHockey.Repositories;
+
+@model Synopsis
+
+@{
+    ViewBag.Title = "Synopsis Partial";
+}
+
+@Scripts.Render("~/Scripts/jquery-ui-1.12.1.min.js")
+
+<link href='@Url.Content("~/Content/themes/base/jquery-ui.css")' rel="stylesheet" type="text/css" />
+
+<h2>SynopsisPartial</h2>
+
+@using (Html.BeginForm("AddSynopsis", "ManageReport", FormMethod.Post)) {
+    <div class="row">
+        <h1>Synopses</h1>
+        <p class="lead">Manage the history of the report, log possibly malignant reports. </p>
+        <div class="col-md-5">
+            <div class="form-horizontal">
+                <!-- Template Name. -->
+                <div class="form-group">
+                    <label class="control-label col-sm-6">Rec First Name: </label>
+                    <div class="form-control-static col-sm-6">
+                        @Html.TextBoxFor(syn => syn.RecommenderFirstName, new { @class = "form-control" })
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="control-label col-sm-6">Rec Last Name: </label>
+                    <div class="form-control-static col-sm-6">
+                        @Html.TextBoxFor(syn => syn.RecommenderLastName, new { @class = "form-control" })
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="control-label col-sm-6">Rec Telephone: </label>
+                    <div class="form-control-static col-sm-6">
+                        @Html.TextBoxFor(syn => syn.ReccomenderTelephoneNum, new { @class = "form-control" })
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="control-label col-sm-6">Business Case: </label>
+                    <div class="form-control-static col-sm-6">
+                        @Html.TextAreaFor(syn => syn.BusinessCase, new { @class = "form-control" })
+                    </div>
+                </div>
+
+                <button id="btnSynopsis" type="submit" class="btn btn-primary" value="AddSynopsis">Add Synopsis</button>
+            </div>
+        </div>
+
+        <div class="col-md-5">
+            <h2>Available Synopsises</h2>
+            <!-- Search Box Markup. -->
+            <div class="form-group">
+                <label class="control-label col-sm-2" for="txtSynopsisesSearch">Search:</label>
+                <div class="col-sm-6">
+                    @Html.TextBox("txtSynopsisesSearch", null, new { @class = "form-control", @Value = (ViewBag.SynSearchStr != null ? ViewBag.SynSearchStr : "") })
+                </div>
+                <div class="col-sm-3 btn-group">
+                    <button type="button" class="btn btn-secondary form-control" onclick="ExecuteSynSearch(this)">Search</button>
+                </div>
+            </div>
+            <button type="button" class="btn btn-secondary pull-right" onclick="location.href='@Url.Action("ClearSynSearch", "ManageReport")'">Clear Search</button>
+            <script type="text/javascript">
+                function ExecuteSearch(sender){
+                    var value = $('#txtSynopsisesSearch').val();
+                    var url = '@Url.Action("ExecuteSynSearch", "ManageReport")' + '\\?searchStr=' + value;
+                    window.location = url;
+                }
+                var availableTags = @using (SynopsisRepository repo = new SynopsisRepository()) {
+                repo.BeginTransaction();
+                List<String> synNames = repo.GetSynopsisNames();
+                @(Html.Raw(Json.Encode(synNames)));
+            };
+                $('#txtReportSearch').autocomplete({
+                    source: availableTags
+                });
+            </script>
+            <div id="tblSynopses" class="height: 100px;overflow-y: scroll;">
+                @if (ViewBag.SynopsisPage != null) {
+                    if (ViewBag.SynopsisPage.Count > 0) {
+                        <table id="tblSynopses" class="table table-striped">
+                            <tr>
+                                <th>Recommender Frist Name</th>
+                                <th>Recommender Last Name</th>
+                                <th>Recommender Telephone Num</th>
+                                <th>Date Created</th>
+                                <th>Remove</th>
+                            </tr>
+                            @foreach (Synopsis synopsis in ViewBag.SynopsisPage) {
+                                <tr>
+                                    <td>@synopsis.RecommenderFirstName</td>
+                                    <td>@synopsis.RecommenderLastName</td>
+                                    <td>@synopsis.ReccomenderTelephoneNum</td>
+                                    <td>@synopsis.DateCreated</td>
+                                    <td>
+                                        <button type="button" class="btn btn-danger" onclick="location.href='@Url.Action("RemoveSynopsis", "ManageReport", new { synopsisId = synopsis.SynopsisId })'">Remove Synopsis</button>
+                                    </td>
+                                </tr>
+                            }
+                        </table>
+                    }
+                }
+            </div>
+
+            <div class="btn-group pull-right">
+                <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("ReportFirstPage", "ManageReport")'">Begin</button>
+                <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("ReportPreviousPage", "ManageReport")'">Previous</button>
+                <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("ReportNextPage", "ManageReport")'">Next</button>
+                <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("ReportLastPage", "ManageReport")'">Next</button>
+            </div>
+        </div>
+    </div>
+}

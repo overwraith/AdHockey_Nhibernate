@@ -1,0 +1,124 @@
+﻿<!-- Author: Cameron Block -->
+@using System;
+@using System.Collections.Generic;
+@using System.Configuration;
+
+@using AdHockey.Models;
+@using AdHockey.Repositories;
+
+@model User
+
+@{
+    ViewBag.Title = "Ban User";
+}
+
+@Scripts.Render("~/Scripts/jquery-ui-1.12.1.min.js")
+
+<link href='@Url.Content("~/Content/themes/base/jquery-ui.css")' rel="stylesheet" type="text/css" />
+
+<style>
+    /* Scroll bar for the sql text. */
+    .scroll-bar {
+        width: 300px;
+        height: 100px;
+        overflow: scroll;
+    }
+</style>
+
+<div class="jumbotron">
+    <h1>Ban User</h1>
+    <p class="lead">Ban Users or Re-Instate them. </p>
+</div>
+
+<div class="row">
+    <!-- Left side. -->
+    <div class="col-md-2">
+        <ul id="links">
+            <li><a href="@Url.Action("Index", "ManageBulkTemplate")">Manage Bulk Users</a></li>
+            <li><a href="@Url.Action("Index", "ManageLimiterItem")">Manage Limiter Users</a></li>
+            <li><a href="@Url.Action("Index", "ManageUser")">Manage User</a></li>
+            <li><a href="@Url.Action("Index", "ManageTemplateItem")">User Item</a></li>
+            <li><a href="@Url.Action("Index", "ManageReport")">Manage Reports</a></li>
+            <li><a href="@Url.Action("Index", "ManageGroup")">Manage Reports</a></li>
+            <li><a href="@Url.Action("Index", "ManageUser")">Manage Reports</a></li>
+            <li><a href="@Url.Action("Index", "Home")">AdHoc Report</a></li>
+        </ul>
+    </div>
+
+    <!-- Right Side. -->
+    <div class="col-md-5">
+        <h2>Ban Users</h2>
+        <!-- Search Box Markup. -->
+        <div class="form-group">
+            <label class="control-label col-sm-2" for="txtUsrSearch">Search:</label>
+            <div class="col-sm-6">
+                @Html.TextBox("txtUsrSearch", null, new { @class = "form-control", @Value = (ViewBag.UserSearchStr != null ? ViewBag.UserSearchStr : "") })
+            </div>
+            <div class="col-sm-3 btn-group">
+                <button type="button" class="btn btn-secondary form-control" onclick="ExecuteSearch(this)">Search</button>
+            </div>
+        </div>
+        <button type="button" class="btn btn-secondary pull-right" onclick="location.href='@Url.Action("ClearSearch", "BanUser")'">Clear Search</button>
+        <script type="text/javascript">
+            function ExecuteSearch(sender){
+                var value = $('#txtUserSearch').val();
+                var url = '@Url.Action("ExecuteSearch", "ManageUser")' + '\\?searchStr=' + value;
+                window.location = url;
+            }
+            var availableTags = @using (UserRepository repo = new UserRepository()) {
+                repo.BeginTransaction();
+                List<String> userNames = repo.GetUserNames();
+                @(Html.Raw(Json.Encode(userNames)));
+            }
+            $('#txtTmpSearch').autocomplte({
+                source: availableTags
+            });
+        </script>
+        <div id="tblUsers" class="height: 100px;overflow-y: scroll;">
+            @if (ViewBag.UserPage != null) {
+                if (ViewBag.UserPage.Count > 0) {
+                    <table id="tblUsers" class="table table-striped">
+                        <tr>
+                            <th>First Name</th>
+                            <th>Last Name</th>
+                            <th>Telephone Number</th>
+                            <th>Ban User</th>
+                            <th>Delete User</th>
+                            <th>Re-Instate User</th>
+                        </tr>
+                        @foreach (User user in ViewBag.UserPage) {
+                            <tr>
+                                <td>@user.FirstName</td>
+                                <td>@user.LastName</td>
+                                <td>@user.TelephoneNumber</td>
+                                <td>
+                                    @if (user.IsActive == true) {
+                                        <button type="button" class="btn btn-danger" onclick="location.href='@Url.Action("BanUser", "BanUser", new { userId = user.UserId })'">Ban User</button>
+                                    }
+                                </td>
+                                <td>
+                                    @if (user.IsActive != true) {
+                                        <button type="button" class="btn btn-danger" onclick="location.href='@Url.Action("DeleteUser", "BanUser", new { userId = user.UserId})'">Remove User</button>
+                                    }
+                                </td>
+                                <td>
+                                    @if (user.IsActive != true) {
+                                        <button type="button" class="btn btn-danger" onclick="location.href='@Url.Action("ReInstateUser", "BanUser", new { userId = user.UserId})'">Re-Instate User</button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </table>
+                }
+            }
+            <button type="button" class="btn btn-danger" onclick="location.href='@Url.Action("CloneLogs", "BanUser")'">Clone Logs</button>
+        </div>
+        <div class="btn-group pull-right">
+            <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("UserFirstPage", "BanUser")'">Begin</button>
+            <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("UserPreviousPage", "BanUser")'">Previous</button>
+            <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("UserNextPage", "BanUser")'">Next</button>
+            <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("UserLastPage", "BanUser")'">Next</button>
+        </div>
+    </div>
+
+</div>

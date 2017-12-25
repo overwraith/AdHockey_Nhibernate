@@ -1,0 +1,169 @@
+﻿<!-- Author: Cameron Block -->
+@using System;
+@using System.Collections.Generic;
+@using System.Configuration;
+
+@using AdHockey.Models;
+@using AdHockey.Repositories;
+
+@model Report
+
+@{
+    ViewBag.Title = "Manage Report";
+}
+
+@Scripts.Render("~/Scripts/jquery-ui-1.12.1.min.js")
+
+<link href='@Url.Content("~/Content/themes/base/jquery-ui.css")' rel="stylesheet" type="text/css" />
+
+<style>
+    /* Scroll bar for the sql text. */
+    .scroll-bar {
+        width: 300px;
+        height: 100px;
+        overflow: scroll;
+    }
+</style>
+
+<div class="jumbotron">
+    <h1>Manage Report</h1>
+    <p class="lead">Create a new Report. </p>
+</div>
+@using (Html.BeginForm("SubmitReport", "ManageReport", FormMethod.Post)) {
+<div class="row">
+    <!-- Left side. -->
+    <div class="col-md-2">
+        <ul id="links">
+            <li><a href="@Url.Action("Index", "ManageBulkTemplate")">Manage Bulk Templates</a></li>
+            <li><a href="@Url.Action("Index", "ManageLimiterItem")">Manage Limiter Templates</a></li>
+            <li><a href="@Url.Action("Index", "ManageTemplateItem")">Template Item</a></li>
+            <li><a href="@Url.Action("Index", "ManageReport")">Manage Reports</a></li>
+            <li><a href="@Url.Action("Index", "ManageGroup")">Manage Groups</a></li>
+            <li><a href="@Url.Action("Index", "ManageUser")">Manage Users</a></li>
+            <li><a href="@Url.Action("Index", "Home")">AdHoc Report</a></li>
+        </ul>
+    </div>
+
+    <!-- Center. -->
+    <div class="col-md-5">
+        <div>
+            <h2>Manage Reports</h2>
+                <div class="form-horizontal">
+                    <!-- Template Name. -->
+                    <div class="form-group">
+                        <label class="control-label col-sm-6">Report Name: </label>
+                        <div class="form-control-static col-sm-6">
+                            @Html.TextBoxFor(report => report.ReportName, new { @class = "form-control" })
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="control-label col-sm-6">Description: </label>
+                        <div class="form-control-static col-sm-6">
+                            @Html.TextAreaFor(report => report.Description, new { @class = "form-control" })
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="control-label col-sm-6">Export Type: </label>
+                        <div class="form-control-static col-sm-6">
+                            @{
+                                var ddlValues = Enum.GetNames(typeof(AdHockey.Models.ExportType))
+                                    .Select(name => new SelectListItem() { Text = name, Value = Enum.Parse(typeof(AdHockey.Models.ExportType), name).ToString() })
+                                    .ToList();
+                            }
+                            @Html.DropDownListFor(report => report.ExportType, ddlValues, new { @class = "form-control" })
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="control-label col-sm-6">Sql: </label>
+                        <div class="form-control-static col-sm-6">
+                            @Html.TextAreaFor(report => report.Sql, new { @class = "form-control" })
+                        </div>
+                    </div>
+
+                    <button id="btnSubmit" type="submit" class="btn btn-primary" value="SubmitReport">Submit</button>
+                </div>
+        </div>
+    </div>
+
+    <!-- Right Side. -->
+    <div class="col-md-5">
+        <h2>Available Reports</h2>
+        <!-- Search Box Markup. -->
+        <div class="row">
+            <div class="form-group">
+                <label class="control-label col-sm-2" for="txtReportSearch">Search:</label>
+                <div class="col-sm-6">
+                    @Html.TextBox("txtReportSearch", null, new { @class = "form-control", @Value = (ViewBag.RptSearchStr != null ? ViewBag.RptSearchStr : "") })
+                </div>
+                <div class="col-sm-3 btn-group">
+                    <button type="button" class="btn btn-secondary form-control" onclick="ExecuteSearch(this)">Search</button>
+                </div>
+            </div>
+            <button type="button" class="btn btn-secondary pull-right" onclick="location.href='@Url.Action("ClearSearch", "ManageReport")'">Clear Search</button>
+            <script type="text/javascript">
+                function ExecuteSearch(sender){
+                    var value = $('#txtReportSearch').val();
+                    var url = '@Url.Action("ExecuteSearch", "ManageReport")' + '\\?searchStr=' + value;
+                    window.location = url;
+                }
+                var availableTags = @using (ReportRepository repo = new ReportRepository()) {
+                    repo.BeginTransaction();
+                    List<String> reportNames = repo.GetReportNames();
+                    @(Html.Raw(Json.Encode(reportNames)));
+                };
+                $('#txtReportSearch').autocomplete({
+                    source: availableTags
+                });
+            </script>
+        </div>
+        <div class="row">
+            <div id="tblReport" class="height:100px;overflow-y:scroll;">
+                @foreach (var report in ViewBag.ReportPage) {
+                    if (ViewBag.ReportPage != null) {
+                        if (ViewBag.ReportPage.Count > 0) {
+                            <div class="well">
+                                <label><b>Report Name:</b></label> @report.ReportName
+                                <br />
+                                <label><b>Export Type:</b></label> @report.ExportType
+                                <br />
+                                <p class="scroll-bar">
+                                    <b>Description: </b>
+                                    <br />
+                                    @if (report.Description != null) {
+                                        @MvcHtmlString.Create(report.Description.Replace(Environment.NewLine, "<br />"))
+                                    }
+                                </p>
+                                <br />
+                                <p class="scroll-bar">
+                                    <b>Sql: </b>
+                                    <br />
+                                    @if (report.Sql != null) {
+                                        @MvcHtmlString.Create(report.Description.Replace(Environment.NewLine, "<br />"))
+                                    }
+                                </p>
+                                <br />
+                                <button class="btn btn-danger" type="button" onclick="location.href='@Url.Action("DeleteReport", "ManageReport", new { reportId = report.ReportId})'">Remove</button>
+                                <button class="btn btn-primary" type="button" onclick="location.href='@Url.Action("AddTemplate", "AddTemplate")'">Add Template</button>
+                                <button class="btn btn-primary" type="button" onclick="location.href='@Url.Action("AddUser", "AddUser")'">Add User</button>
+                                <button class="btn btn-primary" type="button" onclick="location.href='@Url.Action("AddGroup", "AddGroupReport")">Add Group</button>
+                            </div>
+                        }
+                    }
+                }
+            </div>
+        </div>
+            <div class="btn-group pull-right">
+                <button type="button" class="btn btn-primary" onclick="location.href='@Url.Action("ReportFirstPage", "ManageReport")'">Begin</button>
+                <button type="button" class="btn btn-primary" onclick="location.href='@Url.Action("ReportPreviousPage", "ManageReport")'">Previous</button>
+                <button type="button" class="btn btn-primary" onclick="location.href='@Url.Action("ReportNextPage", "ManageReport")'">Next</button>
+                <button type="button" class="btn btn-primary" onclick="location.href='@Url.Action("ReportLastPage", "ManageReport")'">Last</button>
+            </div>
+        </div>
+
+</div>
+}
+
+@Html.Partial("SynopsisPartial", new AdHockey.Models.Synopsis())

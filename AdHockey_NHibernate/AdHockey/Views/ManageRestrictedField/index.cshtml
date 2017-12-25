@@ -1,0 +1,150 @@
+﻿<!-- Author: Cameron Block -->
+@using System;
+@using System.Collections.Generic;
+@using System.Configuration;
+
+@using AdHockey.Models;
+@using AdHockey.Repositories;
+
+@model RestrictedField
+
+@{
+    ViewBag.Title = "Manage Restricted Field";
+}
+
+@Scripts.Render("~/Scripts/jquery-ui-1.12.1.min.js")
+
+<link href='@Url.Content("~/Content/themes/base/jquery-ui.css")' rel="stylesheet" type="text/css" />
+
+<style>
+    /* Scroll bar for the sql text. */
+    .scroll-bar {
+        width: 300px;
+        height: 100px;
+        overflow: scroll;
+    }
+</style>
+
+<div class="jumbotron">
+    <h1>Manage Restricted Tables</h1>
+    <p class="lead">Create a new Restricted Field. </p>
+</div>
+
+<div class="row">
+    <!-- Left side. -->
+    <div class="col-md-2">
+        <ul id="links">
+            <li><a href="@Url.Action("Index", "ManageBulkTemplate")">Manage Bulk Templates</a></li>
+            <li><a href="@Url.Action("Index", "ManageLimiterItem")">Manage Limiter Templates</a></li>
+            <li><a href="@Url.Action("Index", "ManageRestrictedField")">Template Item</a></li>
+            <li><a href="@Url.Action("Index", "ManageGroup")">Manage Groups</a></li>
+            <li><a href="@Url.Action("Index", "ManageGroup")">Manage Groups</a></li>
+            <li><a href="@Url.Action("Index", "ManageUser")">Manage Users</a></li>
+            <li><a href="@Url.Action("Index", "Home")">AdHoc Group</a></li>
+        </ul>
+    </div>
+
+    <!-- Center. -->
+    <div class="col-md-5">
+        <div>
+            <h2>Manage Group</h2>
+            @using (Html.BeginForm("SubmitRestrictedField", "ManageRestrictedField", FormMethod.Post)) {
+                <form class="form-horizontal">
+                    <!-- RestrictedField Name. -->
+                    <div class="form-group">
+                        <label class="control-label col-sm-6">Schema Name: </label>
+                        <div class="form-control-static col-sm-6">
+                            @Html.TextBoxFor(authTab => authTab.SchemaName, new { @class = "form-control" })
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="control-label col-sm-6">Table Name: </label>
+                        <div class="form-control-static col-sm-6">
+                            @Html.TextBoxFor(authTab => authTab.TableName, new { @class = "form-control" })
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="control-label col-sm-6">Column Name: </label>
+                        <div class="form-control-static col-sm-6">
+                            @Html.TextBoxFor(authTab => authTab.ColumnName, new { @class = "form-control" })
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="control-label col-sm-6">Description: </label>
+                        <br />
+                        <div class="form-control-static col-sm-6">
+                            @Html.TextAreaFor(authTab => authTab.Description, new { @class = "form-control" })
+                        </div>
+                    </div>
+
+                    <button id="btnSubmit" type="submit" class="btn btn-primary" value="SubmitRestrictedField">Submit</button>
+                </form>
+            }
+        </div>
+    </div>
+
+    <!-- Right Side. -->
+    <div class="col-md-5">
+        <h2>Available Authorized Tables</h2>
+        <!-- Search Box Markup. -->
+        <div class="form-group">
+            <label class="control-label col-sm-2" for="txtTmpSearch">Search:</label>
+            <div class="col-sm-6">
+                @Html.TextBox("txtTmpSearch", null, new { @class = "form-control", @Value = (ViewBag.RestrictedFieldSearchStr != null ? ViewBag.RestrictedFieldSearchStr : "") })
+            </div>
+            <div class="col-sm-3 btn-group">
+                <button type="button" class="btn btn-secondary form-control" onclick="ExecuteSearch(this)">Search</button>
+            </div>
+        </div>
+        <button type="button" class="btn btn-secondary pull-right" onclick="location.href='@Url.Action("ClearSearch", "ManageRestrictedField")'">Clear Search</button>
+        <script type="text/javascript">
+            function ExecuteSearch(sender){
+                var value = $('#txtTmpSearch').val();
+                var url = '@Url.Action("ExecuteSearch", "ManageRestrictedField")' + '\\?searchStr=' + value;
+                window.location = url;
+            }
+            var availableTags = @using (RestrictedFieldRepository repo = new RestrictedFieldRepository()) {
+                repo.BeginTransaction();
+                List<String> authorizedTableNames = repo.GetRestrictedFieldNames();
+                @(Html.Raw(Json.Encode(authorizedTableNames)));
+            };
+            $('#txtTmpSearch').autocomplete({
+                source: availableTags
+            });
+        </script>
+        <div id="tblRestrictedFields" class="height: 100px;overflow-y: scroll;">
+            @if (ViewBag.RestrictedFieldPage != null) {
+                if (ViewBag.RestrictedFieldPage.Count > 0) {
+                    <table id="tblRestrictedFields" class="table table-striped">
+                        <tr>
+                            <th>Schema Name</th>
+                            <th>Table Name</th>
+                            <th>Column Name</th>
+                            <th>Remove</th>
+                        </tr>
+                        @foreach (RestrictedField authTab in ViewBag.RestrictedFieldPage) {
+                            <tr>
+                                <td>@authTab.SchemaName</td>
+                                <td>@authTab.TableName</td>
+                                <td>@authTab.ColumnName</td>
+                                <td>
+                                    <button type="button" class="btn btn-danger" onclick="location.href='@Url.Action("DeleteRestrictedField", "ManageRestrictedField", new { authTabId = authTab.FieldId})'">Remove</button>
+                                </td>
+                            </tr>
+                        }
+                    </table>
+                }
+            }
+        </div>
+        <div class="btn-group pull-right">
+            <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("RestrictedFieldFirstPage", "ManageRestrictedField")'">Begin</button>
+            <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("RestrictedFieldPreviousPage", "ManageRestrictedField")'">Previous</button>
+            <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("RestrictedFieldNextPage", "ManageRestrictedField")'">Next</button>
+            <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("RestrictedFieldLastPage", "ManageRestrictedField")'">Next</button>
+        </div>
+    </div>
+
+</div>

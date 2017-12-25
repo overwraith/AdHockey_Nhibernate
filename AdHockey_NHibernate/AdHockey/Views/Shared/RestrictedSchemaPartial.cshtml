@@ -1,0 +1,31 @@
+﻿<!-- Author: Cameron Block -->
+@using System;
+@using System.Collections.Generic;
+@using System.Configuration;
+
+@using AdHockey.Models;
+@using AdHockey.Repositories;
+
+@model RestrictedSchema
+
+@{
+    ViewBag.Title = "Restricted Schema";
+}
+
+@using (Html.BeginForm("AddRestrictedSchema", "ManageProfile", FormMethod.Post)) {
+    <div class="form-group">
+        <label class="control-label col-sm-6">Schema Name: </label>
+        <div class="form-control-static col-sm-6">
+            @Html.TextBoxFor(schema => schema.SchemaName, new { @class = "form-control" })
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="control-label col-sm-6">Description: </label>
+        <div class="form-control-static col-sm-6">
+            @Html.TextAreaFor(schema => schema.Description, new { @class = "form-control" })
+        </div>
+    </div>
+
+    <button id="btnSubmit" type="submit" class="btn btn-primary" name="Command" value="AddRestrictedSchema">Submit</button>
+}

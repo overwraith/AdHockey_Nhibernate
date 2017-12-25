@@ -1,0 +1,45 @@
+﻿<!-- Author: Cameron Block -->
+@using System;
+@using System.Collections.Generic;
+@using System.Configuration;
+
+@using AdHockey.Models;
+@using AdHockey.Repositories;
+
+@model AuthorizedField
+
+@{
+    ViewBag.Title = "Authorized Field";
+}
+
+@using (Html.BeginForm("AddField", "ManageProfile", FormMethod.Post)) {
+    <div class="form-group">
+        <label class="control-label col-sm-6">Schema Name: </label>
+        <div class="form-control-static col-sm-6">
+            @Html.TextBoxFor(field => field.SchemaName, new { @class = "form-control" })
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="control-label col-sm-6">Table Name: </label>
+        <div class="form-control-static col-sm-6">
+            @Html.TextBoxFor(field => field.TableName, new { @class = "form-control" })
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="control-label col-sm-6">Column Name: </label>
+        <div class="form-control-static col-sm-6">
+            @Html.TextBoxFor(field => field.ColumnName, new { @class = "form-control" })
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="control-label col-sm-6">Description: </label>
+        <div class="form-control-static col-sm-6">
+            @Html.TextAreaFor(field => field.Description, new { @class = "form-control" })
+        </div>
+    </div>
+
+    <button id="btnSubmit" type="submit" class="btn btn-primary" value="AddField">Submit</button>
+}

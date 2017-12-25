@@ -1,0 +1,141 @@
+﻿<!-- Author: Cameron Block -->
+@using System;
+@using System.Collections.Generic;
+@using System.Configuration;
+
+@using AdHockey.Models;
+@using AdHockey.Repositories;
+
+@model AuthorizedTable
+
+@{
+    ViewBag.Title = "Manage Authorize Table";
+}
+
+@Scripts.Render("~/Scripts/jquery-ui-1.12.1.min.js")
+
+<link href='@Url.Content("~/Content/themes/base/jquery-ui.css")' rel="stylesheet" type="text/css" />
+
+<style>
+    /* Scroll bar for the sql text. */
+    .scroll-bar {
+        width: 300px;
+        height: 100px;
+        overflow: scroll;
+    }
+</style>
+
+<div class="jumbotron">
+    <h1>Manage Authorized Tables</h1>
+    <p class="lead">Create a new Authorized Tables. </p>
+</div>
+
+<div class="row">
+    <!-- Left side. -->
+    <div class="col-md-2">
+        <ul id="links">
+            <li><a href="@Url.Action("Index", "ManageBulkTemplate")">Manage Bulk Templates</a></li>
+            <li><a href="@Url.Action("Index", "ManageLimiterItem")">Manage Limiter Templates</a></li>
+            <li><a href="@Url.Action("Index", "ManageAuthorizedTable")">Template Item</a></li>
+            <li><a href="@Url.Action("Index", "ManageGroup")">Manage Groups</a></li>
+            <li><a href="@Url.Action("Index", "ManageGroup")">Manage Groups</a></li>
+            <li><a href="@Url.Action("Index", "ManageUser")">Manage Users</a></li>
+            <li><a href="@Url.Action("Index", "Home")">AdHoc Group</a></li>
+        </ul>
+    </div>
+
+    <!-- Center. -->
+    <div class="col-md-5">
+        <div>
+            <h2>Manage Group</h2>
+            @using (Html.BeginForm("SubmitAuthorizedTable", "ManageAuthorizedTable", FormMethod.Post)) {
+                <form class="form-horizontal">
+                    <!-- AuthorizedTable Name. -->
+                    <div class="form-group">
+                        <label class="control-label col-sm-6">Schema Name: </label>
+                        <div class="form-control-static col-sm-6">
+                            @Html.TextBoxFor(authTab => authTab.SchemaName, new { @class = "form-control" })
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="control-label col-sm-6">Table Name: </label>
+                        <div class="form-control-static col-sm-6">
+                            @Html.TextBoxFor(authTab => authTab.TableName, new { @class = "form-control" })
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="control-label col-sm-6">Description: </label>
+                        <br />
+                        <div class="form-control-static col-sm-6">
+                            @Html.TextAreaFor(authTab => authTab.Description, new { @class = "form-control" })
+                        </div>
+                    </div>
+
+                    <button id="btnSubmit" type="submit" class="btn btn-primary" value="SubmitAuthorizedTable">Submit</button>
+                </form>
+                                }
+        </div>
+    </div>
+
+    <!-- Right Side. -->
+    <div class="col-md-5">
+        <h2>Available Authorized Tables</h2>
+        <!-- Search Box Markup. -->
+        <div class="form-group">
+            <label class="control-label col-sm-2" for="txtTmpSearch">Search:</label>
+            <div class="col-sm-6">
+                @Html.TextBox("txtTmpSearch", null, new { @class = "form-control", @Value = (ViewBag.AuthorizedTableSearchStr != null ? ViewBag.AuthorizedTableSearchStr : "") })
+            </div>
+            <div class="col-sm-3 btn-group">
+                <button type="button" class="btn btn-secondary form-control" onclick="ExecuteSearch(this)">Search</button>
+            </div>
+        </div>
+        <button type="button" class="btn btn-secondary pull-right" onclick="location.href='@Url.Action("ClearSearch", "ManageAuthorizedTable")'">Clear Search</button>
+        <script type="text/javascript">
+            function ExecuteSearch(sender){
+                var value = $('#txtTmpSearch').val();
+                var url = '@Url.Action("ExecuteSearch", "ManageAuthorizedTable")' + '\\?searchStr=' + value;
+                window.location = url;
+            }
+            var availableTags = @using (AuthorizedTableRepository repo = new AuthorizedTableRepository()) {
+                repo.BeginTransaction();
+                List<String> authorizedTableNames = repo.GetAuthorizedTableNames();
+                @(Html.Raw(Json.Encode(authorizedTableNames)));
+            };
+            $('#txtTmpSearch').autocomplete({
+                source: availableTags
+            });
+        </script>
+        <div id="tblAuthorizedTables" class="height: 100px;overflow-y: scroll;">
+            @if (ViewBag.AuthorizedTablePage != null) {
+                if (ViewBag.AuthorizedTablePage.Count > 0) {
+                    <table id="tblAuthorizedTables" class="table table-striped">
+                        <tr>
+                            <th>Schema Name</th>
+                            <th>Table Name</th>
+                            <th>Remove</th>
+                        </tr>
+                        @foreach (AuthorizedTable authTab in ViewBag.AuthorizedTablePage) {
+                            <tr>
+                                <td>@authTab.SchemaName</td>
+                                <td>@authTab.TableName</td>
+                                <td>
+                                    <button type="button" class="btn btn-danger" onclick="location.href='@Url.Action("DeleteAuthorizedTable", "ManageAuthorizedTable", new { authTabId = authTab.FieldId})'">Remove</button>
+                                </td>
+                            </tr>
+                        }
+                    </table>
+                }
+            }
+        </div>
+        <div class="btn-group pull-right">
+            <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("AuthorizedTableFirstPage", "ManageAuthorizedTable")'">Begin</button>
+            <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("AuthorizedTablePreviousPage", "ManageAuthorizedTable")'">Previous</button>
+            <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("AuthorizedTableNextPage", "ManageAuthorizedTable")'">Next</button>
+            <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("AuthorizedTableLastPage", "ManageAuthorizedTable")'">Next</button>
+        </div>
+    </div>
+
+</div>

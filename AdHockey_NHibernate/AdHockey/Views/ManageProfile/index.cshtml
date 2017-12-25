@@ -1,0 +1,552 @@
+﻿<!-- Author: Cameron Block -->
+@using System;
+@using System.Collections.Generic;
+@using System.Configuration;
+@using System.Linq;
+@using System.Collections;
+@using System.Web.Helpers;
+@using System.Runtime.Serialization;
+
+@using AdHockey.Models;
+@using AdHockey.Repositories;
+
+@model Profile
+
+@{
+    ViewBag.Title = "Manage Profile";
+}
+
+@Scripts.Render("~/Scripts/jquery-ui-1.12.1.min.js")
+
+<link href='@Url.Content("~/Content/themes/base/jquery-ui.css")' rel="stylesheet" type="text/css" />
+
+<style>
+    /* Scroll bar for the sql text. */
+    .scroll-bar {
+        width: 450px;
+        height: 100px;
+        overflow: scroll;
+    }
+</style>
+
+<div class="jumbotron">
+    <h1>Manage Profile</h1>
+    <p class="lead">Create a new profile. </p>
+</div>
+
+<div class="row">
+    <!-- Left side. -->
+    <div class="col-md-2">
+        <ul id="links">
+            <li><a href="@Url.Action("Index", "ManageBulkTemplate")">Manage Bulk Templates</a></li>
+            <li><a href="@Url.Action("Index", "ManageLimiterItem")">Manage Limiter Templates</a></li>
+            <li><a href="@Url.Action("Index", "ManageTemplateItem")">Template Item</a></li>
+            <li><a href="@Url.Action("Index", "ManageReport")">Manage Reports</a></li>
+            <li><a href="@Url.Action("Index", "ManageProfile")">Manage Profiles</a></li>
+            <li><a href="@Url.Action("Index", "ManageUser")">Manage Users</a></li>
+            <li><a href="@Url.Action("Index", "Home")">AdHoc Report</a></li>
+        </ul>
+    </div>
+
+    <!-- Center. -->
+    <div class="col-md-5">
+        <h2>Manage Profile</h2>
+            <div class="form-horizontal">
+                <div class="well">
+                    @{
+                        bool profileNamed = ViewBag.ProfileNamed;
+                        String profileName = ViewBag.ProfileName;
+                    }
+                    <h3>Profile Name: @(!profileNamed ? "" : @profileName)</h3>
+                    <div id="accordion" class="panel-group" @(profileNamed  ? Html.Raw("") : Html.Raw("hidden"))>
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h4 class="panel-title">
+                                    <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne">Authorized Field</a>
+                                </h4>
+                            </div>
+                            <div id="collapseOne" class="panel-collapse collapse">
+                                <div class="panel-body">
+                                    @Html.Partial("AuthorizedFieldPartial", new AdHockey.Models.AuthorizedField())
+                                </div>
+                            </div>
+                        </div>
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h4 class="panel-title">
+                                    <a data-toggle="collapse" data-parent="#accordion" href="#collapseTwo">Authorized Table</a>
+                                </h4>
+                            </div>
+                            <div id="collapseTwo" class="panel-collapse collapse in">
+                                <div class="panel-body">
+                                    @Html.Partial("AuthorizedTablePartial", new AuthorizedTable())
+                                </div>
+                            </div>
+                        </div>
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h4 class="panel-title">
+                                    <a data-toggle="collapse" data-parent="#accordion" href="#collapseThree">Authorized Schema</a>
+                                </h4>
+                            </div>
+                            <div id="collapseThree" class="panel-collapse collapse">
+                                <div class="panel-body">
+                                    @Html.Partial("AuthorizedSchemaPartial", new AuthorizedSchema())
+                                </div>
+                            </div>
+                        </div>
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h4 class="panel-title">
+                                    <a data-toggle="collapse" data-parent="#accordion" href="#collapseFour">Restricted Field</a>
+                                </h4>
+                            </div>
+                            <div id="collapseFour" class="panel-collapse collapse">
+                                <div class="panel-body">
+                                    @Html.Partial("RestrictedFieldPartial", new RestrictedField())
+                                </div>
+                            </div>
+                        </div>
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h4 class="panel-title">
+                                    <a data-toggle="collapse" data-parent="#accordion" href="#collapseFive">Restricted Table</a>
+                                </h4>
+                            </div>
+                            <div id="collapseFive" class="panel-collapse collapse in">
+                                <div class="panel-body">
+                                    @Html.Partial("RestrictedTablePartial", new RestrictedTable())
+                                </div>
+                            </div>
+                        </div>
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h4 class="panel-title">
+                                    <a data-toggle="collapse" data-parent="#accordion" href="#collapseSix">Restricted Schema</a>
+                                </h4>
+                            </div>
+                            <div id="collapseSix" class="panel-collapse collapse">
+                                <div class="panel-body">
+                                    @Html.Partial("RestrictedSchemaPartial", new RestrictedSchema())
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <script type="text/javascript">
+                        (function(){
+                            //close accordon on load
+                            $('#collapseOne').collapse("hide");
+                            $('#collapseTwo').collapse("hide");
+                            $('#collapseThree').collapse("hide");
+                            $('#collapseFour').collapse("hide");
+                            $('#collapseFive').collapse("hide");
+                            $('#collapseSix').collapse("hide");
+                        })();
+                    </script>
+
+                    @using (Html.BeginForm("SubmitProfile", "ManageProfile", FormMethod.Post)) {
+                        <div class="form-group" @(!profileNamed ? @Html.Raw("") : @Html.Raw("hidden"))>
+                            <label class="control-label col-sm-6">Profile Name: </label>
+                            <div class="form-control-static col-sm-6">
+                                @Html.TextBoxFor(prof => prof.ProfileName, new { @class = "form-control" })
+                            </div>
+                        </div>
+                        <button id="btnSubmitName" type="submit" class="btn btn-primary"
+                                name="Command" value="SubmitName" @(!profileNamed ? Html.Raw("") : Html.Raw("style=\"display: none;\""))>
+                            Submit
+                        </button>
+                    }
+                </div>
+                @using (Html.BeginForm("SubmitProfile", "ManageProfile", FormMethod.Post)) {
+                    <button id="btnSubmit" type="submit" class="btn btn-primary" name="Command" value="SubmitProfile">Submit</button>
+                }
+            </div>
+    </div>
+
+    <!-- Right Side. -->
+    <div class="col-md-5">
+        <h2>Available Profiles</h2>
+        <!-- Search Box Markup. -->
+        <div>
+            <div class="form-group">
+                <label class="control-label col-sm-2" for="txtGrpSearch">Search:</label>
+                <div class="col-sm-6">
+                    @Html.TextBox("txtProfSearch", null, new { @class = "form-control", @Value = (ViewBag.ProfileSearchStr != null ? ViewBag.ProfileSearchStr : "") })
+                </div>
+                <div class="col-sm-3 btn-group">
+                    <button type="button" class="btn btn-secondary form-control" onclick="ExecuteSearch(this)">Search</button>
+                </div>
+            </div>
+            <button type="button" class="btn btn-secondary pull-right" onclick="location.href='@Url.Action("ClearSearch", "ManageProfile")'">Clear Search</button>
+            <script type="text/javascript">
+                        function ExecuteSearch(sender){
+                            var value = $('#txtProfSearch').val();
+                            var url = '@Url.Action("ExecuteSearch", "ManageProfile")' + '\\?searchStr=' + value;
+                            window.location = url;
+                        }
+                        var AuthorizedTags = @using (ProfileRepository repo = new ProfileRepository()) {
+                            repo.BeginTransaction();
+                            List<String> profNames = repo.GetProfileNames();
+                    @(Html.Raw(Json.Encode(profNames)));
+                };
+                    $('#txtProfSearch').autocomplete({
+                            source: AuthorizedTags
+                        });
+            </script>
+        </div>
+        <div id="tblProfiles" class="height: 100px;overflow-y: scroll;">
+            @if (ViewBag.ProfilePage != null) {
+                if (ViewBag.ProfilePage.Count > 0) {
+                    <table id="tblProfiles" class="table table-striped">
+                        <tr>
+                            <th>Profile Name</th>
+                            <th>Remove</th>
+                        </tr>
+                        @foreach (Profile profile in ViewBag.ProfilePage) {
+                            <tr>
+                                <td>@profile.ProfileName</td>
+                                <td>
+                                    <button type="button" class="btn btn-danger" onclick="location.href='@Url.Action("RemoveProfile", "ManageProfile", new { profileId = profile.ProfileId})'">Remove</button>
+                                </td>
+                            </tr>
+                        }
+                    </table>
+                }
+            }
+        </div>
+        <div class="btn-group pull-right">
+            <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("ProfileFirstPage", "ManageProfile")'">Begin</button>
+            <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("ProfilePreviousPage", "ManageProfile")'">Previous</button>
+            <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("ProfileNextPage", "ManageProfile")'">Next</button>
+            <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("ProfileLastPage", "ManageProfile")'">Last</button>
+        </div>
+    </div>
+
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <h2>Authorized Fields</h2>
+        <!-- Search Box Markup. -->
+        <div class="form-group">
+            <label class="control-label col-sm-2" for="txtParamSearch">Search:</label>
+            <div class="col-sm-6">
+                @Html.TextBox("txtAuthFieldSearch", null, new { @class = "form-control", @Value = (ViewBag.AuthorizedFieldSearchStr != null ? ViewBag.AuthorizedFieldSearchStr : "") })
+            </div>
+            <div class="col-sm-3 btn-group">
+                <button type="button" class="btn btn-secondary form-control" onclick="ExecuteSearch(this)">Search</button>
+            </div>
+        </div>
+        <button type="button" class="btn btn-secondary pull-right" onclick="location.href='@Url.Action("ClearSearch", "ManageProfile")'">Clear Search</button>
+        <script type="text/javascript">
+            function ExecuteSearch(sender){
+                var value = $('#txtAuthFieldSearch').val();
+                var url = '@Url.Action("ExecuteSearch", "ManageProfile")' + '\\?searchStr=' + value;
+                window.location = url;
+            }
+            var AuthorizedTags = @Html.Raw(Json.Encode(ViewBag.AuthFieldNames));
+            $('#txtAuthFieldSearch').autocomplete({
+                source: AuthorizedTags
+            });
+        </script>
+        <div class="height: 100px;overflow-y: scroll;">
+            @if (ViewBag.AuthFieldPage != null) {
+                if (ViewBag.AuthFieldPage.Count > 0) {
+                    <table id="tblField" class="table table-striped">
+                        <tr>
+                            <th>Schema Name</th>
+                            <th>Table Name</th>
+                            <th>Column Name</th>
+                            <th>Remove</th>
+                        </tr>
+                        @foreach (AuthorizedField field in ViewBag.AuthFieldPage) {
+                            <tr>
+                                <td>@field.SchemaName</td>
+                                <td>@field.TableName</td>
+                                <td>@field.ColumnName</td>
+                                <td>
+                                    <button type="button" class="btn btn-danger" onclick="location.href='@Url.Action("RemoveField", "ManageProfile", new { FieldId = field.FieldId})'">Remove</button>
+                                </td>
+                            </tr>
+                        }
+                    </table>
+                }
+            }
+        </div>
+        <div class="btn-group pull-right">
+            <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("FieldFirstPage", "ManageProfile")'">Begin</button>
+            <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("FieldPreviousPage", "ManageProfile")'">Previous</button>
+            <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("FieldNextPage", "ManageProfile")'">Next</button>
+            <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("FieldLastPage", "ManageProfile")'">Last</button>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <h2>Authorized Tables</h2>
+        <!-- Search Box Markup. -->
+        <div class="form-group">
+            <label class="control-label col-sm-2" for="txtParamSearch">Search:</label>
+            <div class="col-sm-6">
+                @Html.TextBox("txtAuthTableSearch", null, new { @class = "form-control", @Value = (ViewBag.AuthorizedTableSearchStr != null ? ViewBag.AuthorizedTableSearchStr : "") })
+            </div>
+            <div class="col-sm-3 btn-group">
+                <button type="button" class="btn btn-secondary form-control" onclick="ExecuteSearch(this)">Search</button>
+            </div>
+        </div>
+        <button type="button" class="btn btn-secondary pull-right" onclick="location.href='@Url.Action("ClearSearch", "ManageProfile")'">Clear Search</button>
+        <script type="text/javascript">
+            function ExecuteSearch(sender){
+                var value = $('#txtAuthTableSearch').val();
+                var url = '@Url.Action("ExecuteSearch", "ManageProfile")' + '\\?searchStr=' + value;
+                window.location = url;
+            }
+            var AuthTabTags = @(Html.Raw(Json.Encode(ViewBag.AuthTableNames)));
+            $('#txtAuthTableSearch').autocomplete({
+                source: AuthTabTags
+            });
+        </script>
+        <div class="height: 100px;overflow-y: scroll;">
+            @if (ViewBag.AuthTablePage != null) {
+                if (ViewBag.AuthTablePage.Count > 0) {
+                    <table id="tblAuthTable" class="table table-striped">
+                        <tr>
+                            <th>Schema Name</th>
+                            <th>Table Name</th>
+                            <th>Remove</th>
+                        </tr>
+                        @foreach (AuthorizedTable table in ViewBag.AuthTablePage) {
+                            <tr>
+                                <td>@table.SchemaName</td>
+                                <td>@table.TableName</td>
+                                <td>
+                                    <button type="button" class="btn btn-danger" onclick="location.href='@Url.Action("RemoveTable", "ManageProfile", new { FieldId = table.FieldId})'">Remove</button>
+                                </td>
+                            </tr>
+                        }
+                    </table>
+                }
+            }
+        </div>
+        <div class="btn-group pull-right">
+            <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("TableFirstPage", "ManageProfile")'">Begin</button>
+            <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("TablePreviousPage", "ManageProfile")'">Previous</button>
+            <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("TableNextPage", "ManageProfile")'">Next</button>
+            <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("TableLastPage", "ManageProfile")'">Last</button>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <h2>Authorized Schema</h2>
+        <!-- Search Box Markup. -->
+        <div class="form-group">
+            <label class="control-label col-sm-2" for="txtParamSearch">Search:</label>
+            <div class="col-sm-6">
+                @Html.TextBox("txtSchemaSearch", null, new { @class = "form-control", @Value = (ViewBag.TmpSearchStr != null ? ViewBag.TmpSearchStr : "") })
+            </div>
+            <div class="col-sm-3 btn-group">
+                <button type="button" class="btn btn-secondary form-control" onclick="ExecuteSearch(this)">Search</button>
+            </div>
+        </div>
+        <button type="button" class="btn btn-secondary pull-right" onclick="location.href='@Url.Action("ClearSearch", "ManageProfile")'">Clear Search</button>
+        <script type="text/javascript">
+                    function ExecuteSearch(sender){
+                        var value = $('#txtSchemaSearch').val();
+                        var url = '@Url.Action("ExecuteSearch", "ManageProfile")' + '\\?searchStr=' + value;
+                        window.location = url;
+                    }
+                    var AuthSchemaTags = @(Html.Raw(Json.Encode(ViewBag.AuthSchemaNames)));
+                    $('#txtSchemaSearch').autocomplete({
+                        source: AuthSchemaTags
+                    });
+        </script>
+        <div class="height: 100px;overflow-y: scroll;">
+            @if (ViewBag.AuthSchemaPage != null) {
+                if (ViewBag.AuthSchemaPage.Count > 0) {
+                    <table id="tblColumns" class="table table-striped">
+                        <tr>
+                            <th>Schema Name</th>
+                            <th>Remove</th>
+                        </tr>
+                        @foreach (AuthorizedSchema schema in ViewBag.AuthSchemaPage) {
+                            <tr>
+                                <td>@schema.SchemaName</td>
+                                <td>
+                                    <button type="button" class="btn btn-danger" onclick="location.href='@Url.Action("RemoveSchema", "ManageProfile", new { fieldId = schema.FieldId})'">Remove</button>
+                                </td>
+                            </tr>
+                        }
+                    </table>
+                }
+            }
+        </div>
+        <div class="btn-group pull-right">
+            <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("SchemaFirstPage", "ManageProfile")'">Begin</button>
+            <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("SchemaPreviousPage", "ManageProfile")'">Previous</button>
+            <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("SchemaNextPage", "ManageProfile")'">Next</button>
+            <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("SchemaLastPage", "ManageProfile")'">Last</button>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <h2>Restricted Fields</h2>
+        <!-- Search Box Markup. -->
+        <div class="form-group">
+            <label class="control-label col-sm-2" for="txtParamSearch">Search:</label>
+            <div class="col-sm-6">
+                @Html.TextBox("txtRestrictedFieldSearch", null, new { @class = "form-control", @Value = (ViewBag.RestrictedFieldSearchStr != null ? ViewBag.RestrictedFieldSearchStr : "") })
+            </div>
+            <div class="col-sm-3 btn-group">
+                <button type="button" class="btn btn-secondary form-control" onclick="ExecuteSearch(this)">Search</button>
+            </div>
+        </div>
+        <button type="button" class="btn btn-secondary pull-right" onclick="location.href='@Url.Action("RestrictedFieldClearSearch", "ManageProfile")'">Clear Search</button>
+        <script type="text/javascript">
+                    function ExecuteSearch(sender){
+                        var value = $('#txtRestrictedFieldSearch').val();
+                        var url = '@Url.Action("ExecuteSearch", "ManageProfile")' + '\\?searchStr=' + value;
+                        window.location = url;
+                    }
+            var RestrFieldTags = @(Html.Raw(Json.Encode(ViewBag.RestrFieldNames)));
+            $('#txtRestrictedFieldSearch').autocomplete({
+                source: RestrFieldTags
+            });
+        </script>
+        <div class="height: 100px;overflow-y: scroll;">
+            @if (ViewBag.RestrFieldPage != null) {
+                if (ViewBag.RestrFieldPage.Count > 0) {
+                    <table id="tblRestrictedFields" class="table table-striped">
+                        <tr>
+                            <th>Schema Name</th>
+                            <th>Table Name</th>
+                            <th>Column Name</th>
+                            <th>Remove</th>
+                        </tr>
+                        @foreach (RestrictedField field in ViewBag.RestrFieldPage) {
+                            <tr>
+                                <td>@field.SchemaName</td>
+                                <td>@field.TableName</td>
+                                <td>@field.ColumnName</td>
+                                <td>
+                                    <button type="button" class="btn btn-danger" onclick="location.href='@Url.Action("RemoveRestrictedField", "ManageProfile", new { FieldId = field.FieldId})'">Remove</button>
+                                </td>
+                            </tr>
+                        }
+                    </table>
+                }
+            }
+        </div>
+        <div class="btn-group pull-right">
+            <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("RestrictedFieldFirstPage", "ManageProfile")'">Begin</button>
+            <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("RestrictedFieldPreviousPage", "ManageProfile")'">Previous</button>
+            <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("RestrictedFieldNextPage", "ManageProfile")'">Next</button>
+            <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("RestrictedFieldLastPage", "ManageProfile")'">Last</button>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <h2>Restricted Tables</h2>
+        <!-- Search Box Markup. -->
+        <div class="form-group">
+            <label class="control-label col-sm-2" for="txtParamSearch">Search:</label>
+            <div class="col-sm-6">
+                @Html.TextBox("txtRestrictedTableSearch", null, new { @class = "form-control", @Value = (ViewBag.RestrictedTableSearchStr != null ? ViewBag.RestrictedTableSearchStr : "") })
+            </div>
+            <div class="col-sm-3 btn-group">
+                <button type="button" class="btn btn-secondary form-control" onclick="ExecuteSearch(this)">Search</button>
+            </div>
+        </div>
+        <button type="button" class="btn btn-secondary pull-right" onclick="location.href='@Url.Action("ClearSearch", "ManageProfile")'">Clear Search</button>
+        <script type="text/javascript">
+                    function ExecuteSearch(sender){
+                        var value = $('#txtRestrictedTableSearch').val();
+                        var url = '@Url.Action("ExecuteSearch", "ManageProfile")' + '\\?searchStr=' + value;
+                        window.location = url;
+                    }
+            var RestrTabTags = @(Html.Raw(Json.Encode(ViewBag.RestrTableNames)));
+            $('#txtRestrictedTableSearch').autocomplete({
+                source: RestrTabTags
+            });
+        </script>
+        <div class="height: 100px;overflow-y: scroll;">
+            @if (ViewBag.RestrTablePage != null) {
+                if (ViewBag.RestrTablePage.Count > 0) {
+                    <table id="tblAuthTable" class="table table-striped">
+                        <tr>
+                            <th>Schema Name</th>
+                            <th>Table Name</th>
+                            <th>Remove</th>
+                        </tr>
+                        @foreach (RestrictedTable table in ViewBag.RestrTablePage) {
+                            <tr>
+                                <td>@table.SchemaName</td>
+                                <td>@table.TableName</td>
+                                <td>
+                                    <button type="button" class="btn btn-danger" onclick="location.href='@Url.Action("RemoveTable", "ManageProfile", new { FieldId = table.FieldId})'">Remove</button>
+                                </td>
+                            </tr>
+                        }
+                    </table>
+                }
+            }
+        </div>
+        <div class="btn-group pull-right">
+            <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("TableFirstPage", "ManageProfile")'">Begin</button>
+            <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("TablePreviousPage", "ManageProfile")'">Previous</button>
+            <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("TableNextPage", "ManageProfile")'">Next</button>
+            <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("TableLastPage", "ManageProfile")'">Last</button>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <h2>Restricted Schema</h2>
+        <!-- Search Box Markup. -->
+        <div class="form-group">
+            <label class="control-label col-sm-2" for="txtParamSearch">Search:</label>
+            <div class="col-sm-6">
+                @Html.TextBox("txtRestrSchemaSearch", null, new { @class = "form-control", @Value = (ViewBag.RestrictedSchemaSearchStr != null ? ViewBag.RestrictedSchemaSearchStr : "") })
+            </div>
+            <div class="col-sm-3 btn-group">
+                <button type="button" class="btn btn-secondary form-control" onclick="ExecuteSearch(this)">Search</button>
+            </div>
+        </div>
+        <button type="button" class="btn btn-secondary pull-right" onclick="location.href='@Url.Action("ClearSearch", "ManageProfile")'">Clear Search</button>
+        <script type="text/javascript">
+                    function ExecuteSearch(sender){
+                        var value = $('#txtRestrSchemaSearch').val();
+                        var url = '@Url.Action("ExecuteSearch", "ManageProfile")' + '\\?searchStr=' + value;
+                        window.location = url;
+                    }
+            var RestrSchemaTags = @(Html.Raw(Json.Encode(ViewBag.RestrSchemaNames)));
+            $('#txtRestrSchemaSearch').autocomplete({
+                source: RestrSchemaTags
+                    });
+        </script>
+        <div class="height: 100px;overflow-y: scroll;">
+            @if (ViewBag.RestrSchemaPage != null) {
+                if (ViewBag.RestrSchemaPage.Count > 0) {
+                    <table id="tblColumns" class="table table-striped">
+                        <tr>
+                            <th>Schema Name</th>
+                            <th>Remove</th>
+                        </tr>
+                        @foreach (RestrictedSchema schema in ViewBag.RestrSchemaPage) {
+                            <tr>
+                                <td>@schema.SchemaName</td>
+                                <td>
+                                    <button type="button" class="btn btn-danger" onclick="location.href='@Url.Action("RemoveSchema", "ManageProfile", new { fieldId = schema.FieldId})'">Remove</button>
+                                </td>
+                            </tr>
+                        }
+                    </table>
+                }
+            }
+        </div>
+        <div class="btn-group pull-right">
+            <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("RestrictedSchemaFirstPage", "ManageProfile")'">Begin</button>
+            <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("RestrictedSchemaPreviousPage", "ManageProfile")'">Previous</button>
+            <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("RestrictedSchemaNextPage", "ManageProfile")'">Next</button>
+            <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("RestrictedSchemaLastPage", "ManageProfile")'">Last</button>
+        </div>
+    </div>

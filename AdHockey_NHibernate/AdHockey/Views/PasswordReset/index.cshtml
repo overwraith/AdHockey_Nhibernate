@@ -1,0 +1,36 @@
+﻿<!-- Author: Cameron Block -->
+@model AdHockey.Models.ForegotPasswordViewModel
+
+@{
+    ViewBag.Title = "Password Reset";
+}
+
+<div class="jumbotron">
+    <h1>Reset Password</h1>
+    <p class="lead">Reset lost passwords. AdHockey reporting engine. </p>
+</div>
+
+@using (Html.BeginForm("ForegotPassword", "PasswordReset", new { @class = "form-horizontal" })) {
+@Html.AntiForgeryToken()
+<div class="row">
+    <div class="col-md-12">
+        @if (Model.EmailAddress == null) {
+            <h2>Enter email account for reset. </h2>
+            <div class="form-group">
+                @Html.LabelFor(model => model.EmailAddress, new { @class = "control-label col-sm-3" })
+                <div class="col-sm-9 form-control-static">
+                    @Html.TextBoxFor(model => model.EmailAddress, new { @class = "form-control" })
+                    @Html.ValidationMessageFor(model => model.EmailAddress)
+                </div>
+
+            </div>
+            <input type="submit" class="btn btn-primary" />
+        }
+        @if (Model.EmailAddress != null) {
+            <h2>Email has been sent. </h2>
+            <p>Please click the password reset link which has been sent to your email address. </p>
+        }
+    </div>
+</div>
+}
+

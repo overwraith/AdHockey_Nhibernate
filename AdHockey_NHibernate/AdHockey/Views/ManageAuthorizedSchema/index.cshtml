@@ -1,0 +1,132 @@
+﻿<!-- Author: Cameron Block -->
+@using System;
+@using System.Collections.Generic;
+@using System.Configuration;
+
+@using AdHockey.Models;
+@using AdHockey.Repositories;
+
+@model AuthorizedSchema
+
+@{
+    ViewBag.Title = "Manage Authorized Schemas";
+}
+
+@Scripts.Render("~/Scripts/jquery-ui-1.12.1.min.js")
+
+<link href='@Url.Content("~/Content/themes/base/jquery-ui.css")' rel="stylesheet" type="text/css" />
+
+<style>
+    /* Scroll bar for the sql text. */
+    .scroll-bar {
+        width: 300px;
+        height: 100px;
+        overflow: scroll;
+    }
+</style>
+
+<div class="jumbotron">
+    <h1>Manage Authorized Schemas</h1>
+    <p class="lead">Create a new Authorized Schemas. </p>
+</div>
+
+<div class="row">
+    <!-- Left side. -->
+    <div class="col-md-2">
+        <ul id="links">
+            <li><a href="@Url.Action("Index", "ManageBulkTemplate")">Manage Bulk Templates</a></li>
+            <li><a href="@Url.Action("Index", "ManageLimiterItem")">Manage Limiter Templates</a></li>
+            <li><a href="@Url.Action("Index", "ManageAuthorizedSchema")">Template Item</a></li>
+            <li><a href="@Url.Action("Index", "ManageGroup")">Manage Groups</a></li>
+            <li><a href="@Url.Action("Index", "ManageGroup")">Manage Groups</a></li>
+            <li><a href="@Url.Action("Index", "ManageUser")">Manage Users</a></li>
+            <li><a href="@Url.Action("Index", "Home")">AdHoc Group</a></li>
+        </ul>
+    </div>
+
+    <!-- Center. -->
+    <div class="col-md-5">
+        <div>
+            <h2>Manage Group</h2>
+            @using (Html.BeginForm("SubmitAuthorizedSchema", "ManageAuthorizedSchema", FormMethod.Post)) {
+                <form class="form-horizontal">
+                    <!-- AuthorizedSchema Name. -->
+                    <div class="form-group">
+                        <label class="control-label col-sm-6">Schema Name: </label>
+                        <div class="form-control-static col-sm-6">
+                            @Html.TextBoxFor(authTab => authTab.SchemaName, new { @class = "form-control" })
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="control-label col-sm-6">Description: </label>
+                        <br />
+                        <div class="form-control-static col-sm-6">
+                            @Html.TextAreaFor(authTab => authTab.Description, new { @class = "form-control" })
+                        </div>
+                    </div>
+
+                    <button id="btnSubmit" type="submit" class="btn btn-primary" value="SubmitAuthorizedSchema">Submit</button>
+                </form>
+            }
+        </div>
+    </div>
+
+    <!-- Right Side. -->
+    <div class="col-md-5">
+        <h2>Available Authorized Schemas</h2>
+        <!-- Search Box Markup. -->
+        <div class="form-group">
+            <label class="control-label col-sm-2" for="txtTmpSearch">Search:</label>
+            <div class="col-sm-6">
+                @Html.TextBox("txtTmpSearch", null, new { @class = "form-control", @Value = (ViewBag.AuthorizedSchemaSearchStr != null ? ViewBag.AuthorizedSchemaSearchStr : "") })
+            </div>
+            <div class="col-sm-3 btn-group">
+                <button type="button" class="btn btn-secondary form-control" onclick="ExecuteSearch(this)">Search</button>
+            </div>
+        </div>
+        <button type="button" class="btn btn-secondary pull-right" onclick="location.href='@Url.Action("ClearSearch", "ManageAuthorizedSchema")'">Clear Search</button>
+        <script type="text/javascript">
+            function ExecuteSearch(sender){
+                var value = $('#txtTmpSearch').val();
+                var url = '@Url.Action("ExecuteSearch", "ManageAuthorizedSchema")' + '\\?searchStr=' + value;
+                window.location = url;
+            }
+            var availableTags = @using (AuthorizedSchemaRepository repo = new AuthorizedSchemaRepository()) {
+                repo.BeginTransaction();
+                List<String> authorizedSchemaNames = repo.GetAuthorizedSchemaNames();
+                @(Html.Raw(Json.Encode(authorizedSchemaNames)));
+            };
+            $('#txtTmpSearch').autocomplete({
+                source: availableTags
+            });
+        </script>
+        <div id="tblAuthorizedSchemas" class="height: 100px;overflow-y: scroll;">
+            @if (ViewBag.AuthorizedSchemaPage != null) {
+                if (ViewBag.AuthorizedSchemaPage.Count > 0) {
+                    <table id="tblAuthorizedSchemas" class="table table-striped">
+                        <tr>
+                            <th>Schema Name</th>
+                            <th>Remove</th>
+                        </tr>
+                        @foreach (AuthorizedSchema authTab in ViewBag.AuthorizedSchemaPage) {
+                            <tr>
+                                <td>@authTab.SchemaName</td>
+                                <td>
+                                    <button type="button" class="btn btn-danger" onclick="location.href='@Url.Action("DeleteAuthorizedSchema", "ManageAuthorizedSchema", new { authTabId = authTab.FieldId})'">Remove</button>
+                                </td>
+                            </tr>
+                        }
+                    </table>
+                }
+            }
+        </div>
+        <div class="btn-group pull-right">
+            <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("AuthorizedSchemaFirstPage", "ManageAuthorizedSchema")'">Begin</button>
+            <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("AuthorizedSchemaPreviousPage", "ManageAuthorizedSchema")'">Previous</button>
+            <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("AuthorizedSchemaNextPage", "ManageAuthorizedSchema")'">Next</button>
+            <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("AuthorizedSchemaLastPage", "ManageAuthorizedSchema")'">Next</button>
+        </div>
+    </div>
+
+</div>

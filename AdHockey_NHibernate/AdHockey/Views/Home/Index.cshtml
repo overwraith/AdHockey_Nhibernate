@@ -1,0 +1,331 @@
+﻿@using System;
+@using System.Collections.Generic;
+@using System.Linq;
+@using AdHockey.Models;
+
+@model List<AdHockey.Models.Report>
+
+@{
+    ViewBag.Title = "Home";
+}
+
+<link href='@Url.Content("~/Content/themes/base/jquery-ui.css")' rel="stylesheet" type="text/css" />
+
+@Scripts.Render("~/Scripts/angular.min.js")
+@Scripts.Render("~/Scripts/angular-route.min.js")
+@Scripts.Render("~/Scripts/jquery-3.1.1.min.js")
+@Scripts.Render("~/Scripts/jquery-ui-1.12.1.min.js")
+@Scripts.Render("~/Scripts/jquery.numeric.js")
+@Scripts.Render("~/Scripts/jquery.validate.min.js")
+
+<link href='@Url.Content("~/bower_components/angular-upload/src/directives/btnUpload.min.css")' rel="stylesheet" type="text/css" />
+@Scripts.Render("~/bower_components/angular-upload/angular-upload.min.js")
+
+@Scripts.Render("~/Scripts/HomeController.js")
+@*@Scripts.Render("~/bundles/HomeController")*@
+
+<style>
+    /* Scroll bar for the sql text. */
+    .scroll-bar {
+        width: 800px;
+        height: 200px;
+        overflow: scroll;
+    }
+</style>
+
+
+<div ng-app="Home">
+    <div class="jumbotron">
+        <h1>AdHockey Reporting Engine</h1>
+        <p class="lead">Please select a report to execute. </p>
+    </div>
+
+    <div id="cntrlDiv" ng-controller="HomeController" ng-init="index()">
+        @using (Html.BeginForm("ExecuteReport", "Home", FormMethod.Post, new { @class = "form-horizontal" })) {
+            <div class="panel panel-primary panel-default">
+                <div class="panel-heading"><h2>Reports</h2></div>
+                <div class="panel-body">
+                    <div class="form-group">
+                        <!-- Search Box Markup. -->
+                        <div class="form-horizontal row">
+                            <div class="col-md-10">
+                                <div class="form-group ">
+                                    <label class="control-label col-sm-2" for="txtRptSearch">Search:</label>
+                                    <div class="col-sm-6">
+                                        <input id="txtRptSearch" class="form-control" type="text" />
+                                    </div>
+                                    <div class="col-sm-3 btn-group">
+                                        <button type="button" class="btn btn-secondary form-control" ng-click="ExecuteSearch(this)">Search</button>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-secondary pull-right" ng-click="ClearSearch(this)">Clear Search</button>
+                            </div>
+                        </div>
+
+                        <!-- Prompt for the report selection. -->
+                        <div id="tblReports" class="row">
+                            <div class="col-lg-5">
+                                <table id="tblReports" class="table table-striped">
+                                    <tr>
+                                        <th>Report Name</th>
+                                        <th></th>
+                                    </tr>
+                                    <tr ng-repeat="report in ctReportPage">
+                                        <td>
+                                            <input id="hiddenReportId" type="hidden" value="{{report.ReportId}}" />
+                                            <label>{{report.ReportName}}</label>
+                                        </td>
+                                        <td><input id="chkReport" type="checkbox" value="{{report.ReportId}}" ng-click="ReportSelected()" /></td>
+                                    </tr>
+                                </table>
+                                <div class="btn-group pull-right">
+                                    <button type="submit" class="btn btn-primary" ng-click="FirstPage()">Begin</button>
+                                    <button type="submit" class="btn btn-primary" ng-click="PreviousPage()">Previous</button>
+                                    <button type="submit" class="btn btn-primary" ng-click="NextPage()">Next</button>
+                                    <button type="submit" class="btn btn-primary" ng-click="LastPage()">Last</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="hiddenDiv" class="panel panel-primary panel-default" ng-if="ctReport != undefined">
+                <div class="panel-heading"><h3>Parameters</h3></div>
+                <div class="panel-body">
+                    <!--****************************************************************************************************-->
+                    <!-- Iterate over User Items, can contain many different types of control types. -->
+                    <div ng-repeat="ctTemplate in ctReport.TemplateItems.$values">
+                        <!-- User Items can vary by type. -->
+                        <div class="form-horizontal row" ng-if="ctTemplate.ClassName == 'TemplateItem'">
+                            <div ng-if="ctTemplate.ControlName == 'DatePicker' && ctTemplate.ClrType == 'System.DateTime'">
+                                <!-- Uses a date picker. -->
+                                <div class="form-group input-group">
+                                    <label class="control-label col-md-3" ng-attr-for="'ctrlUser_' + ('0' + $parent.$parent.$index + 1).slice(-2)" class="col-sm-3">{{ctTemplate.TemplateName}}</label>
+                                    <div class="col-md-4 form-control-static">
+                                        <input ng-attr-id="'ctrlUser_' + ('0' + $parent.$parent.$index + 1).slice(-2)" type="Date" data_date_format="mm/dd/yyyy" class="form-control" placeholder="Date" ng-model="ctTemplate.StrVal" onload="initDatePicker(this)" />
+                                    </div>
+                                    <span class="input-group-btn">
+                                        <button class="btn btn-default" type="button">
+                                            <span class="glyphicon glyphicon-calendar" />
+                                        </button>
+                                    </span>
+                                </div>
+                                <script type="text/javascript">
+                                    function initDatePicker(control) {
+                                        $(control).datepicker();
+                                    }
+                                </script>
+                            </div>
+                            <div ng-if="ctTemplate.ControlName == 'TextBox' && ctTemplate.ClrType == 'System.Int16'">
+                                <div class="form-group">
+                                    <label class="control-label col-md-3" ng-attr-for="'ctrlUser_' + ('0' + $parent.$parent.$index + 1).slice(-2)" class="col-sm-3">{{ctTemplate.TemplateName}}</label>
+                                    <div class="col-md-4 form-control-static">
+                                        <input ng-attr-id="'ctrlUser_' + ('0' + $parent.$parent.$index + 1).slice(-2)" type="text" class="form-control numeric" ng-model="ctTemplate.StrVal" />
+                                    </div>
+                                    <script type="text/javascript">
+                                        var scriptElement = document.getElementsByTagName('script');
+                                        var topElement = $(scriptElement).parent().parent().parent();
+                                        var middleElement = topElement.children("script").parent();
+                                        var index = topElement.index(middleElement);
+
+                                        var controlName = 'ctrlUser_' + ('0' + index + 1).slice(-2);
+                                        $('#' + controlName).validate({
+                                            rules: {
+                                                field: {
+                                                    required: true,
+                                                    range: [-32768, 32767]
+                                                }
+                                            }
+                                        });
+                                    </script>
+                                </div>
+                            </div>
+                            <div ng-if="ctTemplate.ControlName == 'TextBox' && ctTemplate.ClrType == 'System.Int32'">
+                                <div class="form-group">
+                                    <label class="control-label col-md-3" ng-attr-for="'ctrlUser_' + ('0' + $parent.$parent.$index + 1).slice(-2)" class="col-sm-3">{{ctTemplate.TemplateName}}</label>
+                                    <div class="col-md-4 form-control-static">
+                                        <input ng-attr-id="'ctrlUser_' + ('0' + $parent.$parent.$index + 1).slice(-2)" type="text" class="form-control numeric" ng-model="ctTemplate.StrVal" />
+                                    </div>
+                                    <script type="text/javascript">
+                                        var scriptElement = document.getElementsByTagName('script');
+                                        var topElement = $(scriptElement).parent().parent().parent();
+                                        var middleElement = topElement.children("script").parent();
+                                        var index = topElement.index(middleElement);
+
+                                        var controlName = 'ctrlUser_' + ('0' + index + 1).slice(-2);
+                                        $('#' + controlName).validate({
+                                            rules: {
+                                                field: {
+                                                    required: true,
+                                                    range: [-2147483648, 2147483647]
+                                                }
+                                            }
+                                        });
+                                    </script>
+                                </div>
+                            </div>
+                            <div ng-if="ctTemplate.ControlName == 'TextBox' && ctTemplate.ClrType == 'System.Int64'">
+                                <div class="form-group">
+                                    <label class="control-label col-md-3" ng-attr-for="'ctrlUser_' + ('0' + $parent.$parent.$index + 1).slice(-2)" class="col-sm-3">{{ctTemplate.TemplateName}}</label>
+                                    <div class="col-md-4 form-control-static">
+                                        <input ng-attr-id="'ctrlUser_' + ('0' + $parent.$parent.$index + 1).slice(-2)" type="text" class="form-control numeric" ng-model="ctTemplate.StrVal" />
+                                    </div>
+                                    <script type="text/javascript">
+                                        var scriptElement = document.getElementsByTagName('script');
+                                        var topElement = $(scriptElement).parent().parent().parent();
+                                        var middleElement = topElement.children("script").parent();
+                                        var index = topElement.index(middleElement);
+
+                                        var controlName = 'ctrlUser_' + ('0' + index + 1).slice(-2);
+                                        $('#' + controlName).validate({
+                                            rules: {
+                                                field: {
+                                                    required: true,
+                                                    range: [-9223372036854775808, 9223372036854775807]
+                                                }
+                                            }
+                                        });
+                                    </script>
+                                </div>
+                            </div>
+                            <div ng-if="ctTemplate.ControlName == 'TextBox' && ctTemplate.ClrType == 'System.Double'">
+                                <div class="form-group">
+                                    <label class="control-label col-md-3" ng-attr-for="'ctrlUser_' + ('0' + $parent.$parent.$index + 1).slice(-2)" class="col-sm-3">{{ctTemplate.TemplateName}}</label>
+                                    <div class="col-md-4 form-control-static">
+                                        <input ng-attr-id="'ctrlUser_' + ('0' + $parent.$parent.$index + 1).slice(-2)" type="text" class="form-control numeric" ng-model="ctTemplate.StrVal" />
+                                    </div>
+                                    <script type="text/javascript">
+                                        var scriptElement = document.getElementsByTagName('script');
+                                        var topElement = $(scriptElement).parent().parent().parent();
+                                        var middleElement = topElement.children("script").parent();
+                                        var index = topElement.index(middleElement);
+
+                                        var controlName = 'ctrlUser_' + ('0' + index + 1).slice(-2);
+                                        $('#' + controlName).validate({
+                                            rules: {
+                                                field: {
+                                                    required: true,
+                                                    range: [-1.79769313486232e308, 1.79769313486232e308]
+                                                }
+                                            }
+                                        });
+                                    </script>
+                                </div>
+                            </div>
+                            <div ng-if="ctTemplate.ControlName == 'TextBox' && ctTemplate.ClrType == 'System.Decimal'">
+                                <div class="form-group">
+                                    <label class="control-label col-md-3" ng-attr-for="'ctrlUser_' + ('0' + $parent.$parent.$index + 1).slice(-2)" class="col-sm-3">{{ctTemplate.TemplateName}}</label>
+                                    <div class="col-md-4 form-control-static">
+                                        <input ng-attr-id="'ctrlUser_' + ('0' + $parent.$parent.$index + 1).slice(-2)" type="text" class="form-control numeric" ng-model="ctTemplate.StrVal" />
+                                    </div>
+                                    <!-- Size of decimal is large, need to get better versions of the numbers, more friendly for validation. -->
+                                </div>
+                            </div>
+                            <div ng-if="ctTemplate.ControlName == 'TextBox' && ctTemplate.ClrType == 'System.Char'">
+                                <div class="form-group">
+                                    <label class="control-label col-md-3" ng-attr-for="'ctrlUser_' + ('0' + $parent.$parent.$index + 1).slice(-2)" class="col-sm-3">{{ctTemplate.TemplateName}}</label>
+                                    <div class="col-md-4 form-control-static">
+                                        <input ng-attr-id="'ctrlUser_' + ('0' + $parent.$parent.$index + 1).slice(-2)" type="text" class="form-control" ng-model="ctTemplate.StrVal" maxlength="1" />
+                                    </div>
+                                    <script type="text/javascript">
+                                        $('#' + controlName).validate({
+                                            rules: {
+                                                field: {
+                                                    required: true,
+                                                    minlength: 1,
+                                                    maxlength: 1
+                                                }
+                                            }
+                                        });
+                                    </script>
+                                </div>
+                            </div>
+                            <div ng-if="ctTemplate.ControlName == 'TextBox' && ctTemplate.ClrType == 'System.String'">
+                                <div class="form-group">
+                                    <label class="control-label col-md-3" ng-attr-for="'ctrlUser_' + ('0' + $parent.$parent.$index + 1).slice(-2)">{{ctTemplate.TemplateName + ': '}}</label>
+                                    <div class="col-md-4 form-control-static">
+                                        <input ng-attr-id="'ctrlUser_' + ('0' + $parent.$parent.$index + 1).slice(-2)" type="text" class="form-control" ng-model="ctTemplate.StrVal" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!--****************************************************************************************************-->
+                    <!-- Iterate over bulk Users, upload multiple values for the reporting engine. -->
+                    <div ng-repeat="ctTemplate in ctReport.BulkTemplates.$values">
+                        <div class="form-horizontal row" ng-if="ctTemplate.ClassName == 'BulkTemplate'">
+                            <!-- Bulk Users upload excel file for loading into the server tables. -->
+                            <div class="" ng-if="ctTemplate.ClrType == 'System.DateTime' || ctTemplate.ClrType == 'System.String' || ctTemplate.ClrType == 'System.Char' || ctTemplate.ClrType == 'System.Int16' || ctTemplate.ClrType == 'System.Int32' || ctTemplate.ClrType == 'System.Int64' || ctTemplate.ClrType == 'System.Decimal' || ctTemplate.ClrType == 'System.Float'">
+                                <!-- Upload Excel file to the server. -->
+                                <div class="form-group">
+                                    <label class="control-label col-md-3" ng-attr-for="'ctrlBulkUpload_' + ('0' + $parent.$parent.$index + 1).slice(-2)">{{'Upload ' + ctTemplate.TemplateName + ': '}}</label>
+                                    <div class="col-md-4 form-control-static">
+                                        <button class="form-control btn btn-primary" ng-attr-id="'ctrlBulkUpload_' + ('0' + $parent.$parent.$index + 1).slice(-2)" type="button" data-toggle="modal" data-target="#ExcelUploadMod" ng-click="CallExcelModal(ctTemplate)">Upload</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!--****************************************************************************************************-->
+                    <!-- Iterate over limiter items, contain boolean decisions yes/no. -->
+                    <div ng-repeat="ctTemplate in ctReport.LimiterItems.$values">
+                        <!-- Limiter items are always boolean values (check boxes). -->
+                        <div class="form-horizontal row" ng-if="ctTemplate.ClassName == 'LimiterItem'">
+                            <!-- Controls for limiter items are always check boxes. -->
+                            <div class="form-group">
+                                <label class="control-label col-md-3" ng-attr-for="'chkLimiter_' + ('0' + $parent.$parent.$index + 1).slice(-2)">{{ctTemplate.TemplateName + ': '}}</label>
+                                <div class="col-md-4 form-control-static">
+                                    <input class="form-control col-sm-8" ng-attr-id="'chkLimiter_' + ('0' + $parent.$parent.$index + 1).slice(-2)" type="checkbox" ng-model="ctTemplate.BoolVal" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+                <!-- Has to collect fields into the Users then send json to the server. -->
+            <button id="btnExecute" type="button" class="btn btn-primary" ng-click="ExecuteReport()">Execute Report</button>
+            <button id="btnSubmit" type="submit" style="display:none" name="jsonReport" value="" />}
+
+        <!-- Placing excel upload modal here... -->
+        @using (Html.BeginForm("UploadExcel", "Home", FormMethod.Post, new { enctype = "multipart/form-data", @class = "form-horizontal" })) {
+            <div class="modal fade" id="excelModal" role="dialog">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">Excel Upload</h4>
+                        </div>
+                        <div class="modal-body">
+                            <p>Please upload an excel file that contains the data you are wishing to include in the report parameters.</p>
+                        </div>
+                        <div class="modal-footer">
+
+                            <div>
+                                <div class="form-group">
+                                    @Html.Label("Excel File:", new { @class = "control-label col-md-2" })
+                                    <div class="col-md-10">
+                                        <input id="excelFile"
+                                               name="excelFile"
+                                               type="file" />
+                                        <button class="btn btn-primary"
+                                                type="button"
+                                                ng-click="ExcelUpload()">
+                                            Submit
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+

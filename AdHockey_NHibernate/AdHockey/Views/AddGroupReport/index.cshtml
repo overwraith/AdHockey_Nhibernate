@@ -1,0 +1,292 @@
+﻿<!-- Author: Cameron Block -->
+@using System;
+@using System.Collections.Generic;
+@using System.Configuration;
+
+@using AdHockey.Models;
+@using AdHockey.Repositories;
+
+@model Report
+
+@{
+    ViewBag.Title = "Add Group to Report";
+}
+
+@Scripts.Render("~/Scripts/jquery-ui-1.12.1.min.js")
+
+<link href='@Url.Content("~/Content/themes/base/jquery-ui.css")' rel="stylesheet" type="text/css" />
+
+<style>
+    /* Scroll bar for the sql text. */
+    .scroll-bar {
+        width: 300px;
+        height: 100px;
+        overflow: scroll;
+    }
+</style>
+
+<div class="jumbotron">
+    <h1>Add Group to Report</h1>
+    <p class="lead">Place groups in reports. Entire groups can recieve reports. </p>
+</div>
+
+<div class="container">
+    <form method="post">
+        <!-- Left Side. -->
+        <div class="col-md-2">
+            <ul id="links">
+                <li><a href="@Url.Action("Index", "ManageBulkTemplate")">Manage Bulk Users</a></li>
+                <li><a href="@Url.Action("Index", "ManageLimiterItem")">Manage Limiter Users</a></li>
+                <li><a href="@Url.Action("Index", "ManageTemplateItem")">User Item</a></li>
+                <li><a href="@Url.Action("Index", "ManageReport")">Manage Reports</a></li>
+                <li><a href="@Url.Action("Index", "ManageReport")">Manage Reports</a></li>
+                <li><a href="@Url.Action("Index", "ManageGroup")">Manage Groups</a></li>
+                <li><a href="@Url.Action("Index", "Home")">AdHoc Report</a></li>
+            </ul>
+        </div>
+
+        <!-- Center. -->
+        <div class="col-md-10">
+            <!-- Select Report. -->
+            <div class="row">
+                <h2>Select Report to Modify</h2>
+
+                <!-- Search box Markup. -->
+                <div class="form-horizontal">
+                    <div class="form-group">
+                        <label class="control-label col-sm-2" for="txtReportSearch">Search: </label>
+                        <div class="col-sm-6">
+                            @Html.TextBox("txtReportSearch", null, new { @class = "form-control", @Value = (ViewBag.ReportSearchStr != null ? ViewBag.ReportSearchStr : "") })
+                        </div>
+                        <div class="col-sm-3 btn-group">
+                            <button type="button" class="btn btn-secondary form-control" onclick="ExecuteSearch(this)">Search</button>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-secondary pull-right" onclick="location.href='@Url.Action("ClearSearch", "AddGroupReport")'">Clear Search</button>
+                <script type="text/javascript">
+                    function ExecuteSearch() {
+                        var value = $('#txtReportSearch').val();
+                        var url = '@Url.Action("ExecuteSearch", "AddGroupReport")' + '\\?searchStr=' + value;
+                        window.location = url;
+                    }
+                    var availableTags = @using (ReportRepository repo = new ReportRepository()) {
+                        List<String> groupNames = repo.GetReportNames();
+                        @(Html.Raw(Json.Encode(groupNames)));
+                    };
+                    $('#txtReportSearch').autocomplete({
+                        source: availableTags
+                    });
+                </script>
+                <table id="tblReports" class="table table-striped">
+                    <tr>
+                        <th></th>
+                        <th>Report Name</th>
+                        <th>Selected Report</th>
+                    </tr>
+                    @if (ViewBag.ReportPage != null) {
+                        for (int i = 0; i < ViewBag.ReportPage.Count; i++) {
+                            var report = ViewBag.ReportPage[i];
+                            <tr>
+                                <td>@Html.Hidden("hiddenGrpId", (object)report.ReportId)</td>
+                                <td>@report.ReportName</td>
+                                @if (ViewBag.CheckedReportId == report.ReportId) {
+                                    <td>@Html.CheckBox("chkReport", true, new { onclick = "SelectionChanged(this);", name = "radioReport", @checked = (ViewBag.CheckedReportId == report.ReportId) ? true : false })</td>
+                                }
+                                else {
+                                    <td>@Html.CheckBox("chkReport", false, new { onclick = "SelectionChanged(this);", name = "radioReport", @checked = (ViewBag.CheckedReportId == report.ReportId) ? true : false })</td>
+                                }
+                            </tr>
+                        }
+                    }
+                </table>
+                <div class="btn-group pull-right">
+                    <button type="submit" class="btn btn-primary" onclick="ReportFirstPage(this)">Begin</button>
+                    <button type="submit" class="btn btn-primary" onclick="ReportPreviousPage(this)">Previous</button>
+                    <button type="submit" class="btn btn-primary" onclick="ReportNextPage(this)">Next</button>
+                    <button type="submit" class="btn btn-primary" onclick="ReportLastPage(this)">Last</button>
+
+                    <script type="text/javascript">
+                        function ReportFirstPage(control) {
+                            var isChecked = control.checked;
+                            if (isChecked) {
+                                var value = $(control).closest('tr').find('#hiddenGrpId').val();
+                                var url = '@Url.Action("ReportFirstPage", "AddGroupReport")' + '\\?reportId=' + value;
+                                window.location = url;
+                            }
+                        }
+                        function ReportPreviousPage(control) {
+                            var isChecked = control.checked;
+                            if (isChecked) {
+                                var value = $(control).closest('tr').find('#hiddenGrpId').val();
+                                var url = '@Url.Action("ReportPreviousPage", "AddGroupReport")' + '\\?reportId=' + value;
+                                window.location = url;
+                            }
+                        }
+                        function ReportNextPage(control) {
+                            var isChecked = control.checked;
+                            if (isChecked) {
+                                var value = $(control).closest('tr').find('#hiddenGrpId').val();
+                                var url = '@Url.Action("ReportNextPage", "AddGroupReport")' + '\\?reportId=' + value;
+                                window.location = url;
+                            }
+                        }
+                        function ReportLastPage(control) {
+                            var isChecked = control.checked;
+                            if (isChecked) {
+                                var value = $(control).closest('tr').find('#hiddenGrpId').val();
+                                var url = '@Url.Action("ReportLastPage", "AddGroupReport")' + '\\?reportId=' + value;
+                                window.location = url;
+                            }
+                        }
+                    </script>
+                </div>
+                <script type="text/javascript">
+                    function SelectionChanged(sender) {
+                        //select closest hidden field which contains group id
+                        var isChecked = sender.checked;
+                        var value = $(sender).closest('tr').find('#hiddenGrpId').val();
+                        if (isChecked) {
+                            //build url to redirect to
+                            var url = '@Url.Action("SetDataSourceB", "AddGroupReport")' + '\\?reportId=' + value;
+                            window.location = url;
+                        }
+                        else {
+                            $('#hiddenDiv').addClass('hidden');
+                        }
+                    }//end function
+                </script>
+            </div>
+        </div>
+
+        <div id="hiddenDiv" class="@(Model == null ? "hidden" : "")" )>
+            <div class="row">
+
+                <!-- Available Groups. -->
+                <div class="col-md-6">
+                    <!-- Group list with button to add to group. Maybe an arrow button. -->
+                    <h3>Available Groups</h3>
+                    <!-- Search box Markup. -->
+                    <div class="form-group">
+                        <label class="control-label col-sm-2" for="txtGroupSearch">Search:</label>
+                        <div class="col-sm-6">
+                            @Html.TextBox("txtGroupSearch", null, new { @class = "form-control", @Value = (ViewBag.GroupSearchStr != null ? ViewBag.GroupSearchStr : "") })
+                        </div>
+                        <div class="col-sm-3 btn-group">
+                            <button type="button" class="btn btn-secondary form-control" onclick="ExecuteGroupSearch(this)">Search</button>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-secondary pull-right" onclick="location.href='@Url.Action("ClearGroupSearch", "AddGroupReport")'">Clear Search</button>
+                    <script type="text/javascript">
+                        function ExecuteGroupSearch() {
+                            var value = $('#txtGroupSearch').val();
+                            var url = '@Url.Action("ExecuteGroupSearch", "AddGroupReport")' + '\\?searchStr=' + value;
+                            window.location = url;
+                        }
+                        var availableTags = @using (GroupRepository repo = new GroupRepository()) {
+                            if (ViewBag.CheckedReportId != null) {
+                                List<String> groupNames = repo.GetGroupNames();
+                                @(Html.Raw(Json.Encode(groupNames)));
+                            }
+                            else {
+                                @Html.Raw("[];");
+                            }
+                        };
+                        $('#txtGroupSearch').autocomplete({
+                            source: availableTags
+                        });
+                    </script>
+                    <table id="tblGroups" class="table table-striped">
+                        <tr>
+                            <th>Group Name</th>
+                            <th>Add</th>
+                        </tr>
+                        @if (Model != null) {
+                            foreach (var grp in ViewBag.GroupPage) {
+                                <tr>
+                                    <td>@grp.GroupName</td>
+                                    <td>
+                                        <button type="button" class="btn btn-primary" onclick="location.href='@Url.Action("AddGroup", "AddGroupReport", new { groupId = grp.GroupId })'">Add Group</button>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </table>
+                    <div class="btn-group pull-right">
+                        <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("GroupFirstPage", "AddGroupReport")'">Begin</button>
+                        <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("GroupPreviousPage", "AddGroupReport")'">Previous</button>
+                        <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("GroupNextPage", "AddGroupReport")'">Next</button>
+                        <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("GroupLastPage", "AddGroupReport")'">Last</button>
+                    </div>
+                </div>
+
+                <!-- Groups in group. -->
+                <div class="col-md-6">
+                    <h3>Report Current Groups</h3>
+                    <!-- Search box Markup. -->
+                    <div class="form-horizontal">
+                        <div class="form-group">
+                            <label class="control-label col-sm-2" for="txtGroupSearch">Search:</label>
+                            <div class="col-sm-7">
+                                @Html.TextBox("txtGrpUsrSearch", null, new { @class = "form-control", @Value = (ViewBag.GrpUsrSearchStr != null ? ViewBag.GrpUsrSearchStr : "") })
+                            </div>
+                            <div class="col-sm-3">
+                                <button type="button" class="btn btn-secondary form-control" onclick="ExecuteGrpUsrSearch(this)">Search</button>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-secondary pull-right" onclick="location.href='@Url.Action("ClearGrpUsrSearch", "BindGroupReport")'">Clear Search</button>
+                    <script type="text/javascript">
+                        function ExecuteGrpUsrSearch() {
+                            var value = $('#txtGrpGroupSearch').val();
+                            var url = '@Url.Action("ExecuteGrpUsrSearch", "AddGroupReport")' + '\\?searchStr=' + value;
+                            window.location = url;
+                        }
+                        var availableTags = @using (GroupRepository repo = new GroupRepository()) {
+                            if (ViewBag.CheckedReportId != null) {
+                                List<String> groupNames = repo.GetReportGroupNames(ViewBag.CheckedReportId);
+                                @(Html.Raw(Json.Encode(groupNames)));
+                            }
+                            else {
+                                @Html.Raw("[];");
+                            }
+                        };
+                        $('#txtGrpUsrSearch').autocomplete({
+                            source: availableTags
+                        });
+                    </script>
+                    <table id="tblGrpGroups" class="table table-striped">
+                        <tr>
+                            <th>Group Name</th>
+                            <th>Remove</th>
+                        </tr>
+                        @if (Model != null) {
+                            if (ViewBag.ReportGroupPage != null) {
+                                foreach (var grp in ViewBag.ReportGroupPage) {
+                                    <tr>
+                                        <td>@grp.GroupName</td>
+                                        <td>
+                                            <button type="button" class="btn btn-danger" onclick="location.href='@Url.Action("RemoveGroup", "AddGroupReport", new { groupId = grp.GroupId })'">Remove Group</button>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        }
+                    </table>
+                    <div class="btn-group pull-right">
+                        <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("UsrGrpFirstPage", "AddGroupReport")'">Begin</button>
+                        <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("UsrGrpPreviousPage", "AddGroupReport")'">Previous</button>
+                        <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("UsrGrpNextPage", "AddGroupReport")'">Next</button>
+                        <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("UsrGrpLastPage", "AddGroupReport")'">Last</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script type="text/javascript">
+            function GetIds(sender) {
+                var ids = $(sender).closest(input[type = "text"])[0].val();
+                alert(ids);
+            }
+        </script>
+    </form>
+</div>

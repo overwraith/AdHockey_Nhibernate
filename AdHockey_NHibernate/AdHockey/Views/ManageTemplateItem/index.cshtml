@@ -1,0 +1,156 @@
+﻿<!-- Author: Cameron Block -->
+@using System;
+@using System.Collections.Generic;
+@using System.Configuration;
+
+@using AdHockey.Models;
+@using AdHockey.Repositories;
+
+@model TemplateItem
+
+@{
+    ViewBag.Title = "Manage Template Item";
+}
+
+@Scripts.Render("~/Scripts/jquery-ui-1.12.1.min.js")
+
+<link href='@Url.Content("~/Content/themes/base/jquery-ui.css")' rel="stylesheet" type="text/css" />
+
+<style>
+    /* Scroll bar for the sql text. */
+    .scroll-bar {
+        width: 300px;
+        height: 100px;
+        overflow: scroll;
+    }
+</style>
+
+<div class="jumbotron">
+    <h1>Manage Template Item</h1>
+    <p class="lead">Create a new Template Item. </p>
+</div>
+
+<div class="row">
+    <!-- Left side. -->
+    <div class="col-md-2">
+        <ul id="links">
+            <li><a href="@Url.Action("Index", "ManageBulkTemplate")">Manage Bulk Templates</a></li>
+            <li><a href="@Url.Action("Index", "ManageLimiterItem")">Manage Limiter Templates</a></li>
+            <li><a href="@Url.Action("Index", "ManageTemplateItem")">Template Item</a></li>
+            <li><a href="@Url.Action("Index", "ManageReport")">Manage Reports</a></li>
+            <li><a href="@Url.Action("Index", "ManageGroup")">Manage Groups</a></li>
+            <li><a href="@Url.Action("Index", "ManageUser")">Manage Users</a></li>
+            <li><a href="@Url.Action("Index", "Home")">AdHoc Report</a></li>
+        </ul>
+    </div>
+
+    <!-- Center. -->
+    <div class="col-md-5">
+        <div>
+            <h2>Manage Group</h2>
+            @using (Html.BeginForm("SubmitTemplate", "ManageTemplateItem", FormMethod.Post)) {
+                <form class="form-horizontal">
+                    <!-- Template Name. -->
+                    <div class="form-group">
+                        <label class="control-label col-sm-6">Template Name: </label>
+                        <div class="form-control-static col-sm-6">
+                            @Html.TextBoxFor(template => template.TemplateName, new { @class = "form-control" })
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="control-label col-sm-6">Order: </label>
+                        <div class="form-control-static col-sm-6">
+                            @Html.TextBoxFor(template => template.Order, new { @class = "form-control" })
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="control-label col-sm-6">Clr Type: </label>
+                        <div class="form-control-static col-sm-6">
+                            @{
+                                var ddlValues = ((SupportedTypesSection)ConfigurationManager.GetSection("SupportedTypes")).GetDdlListItem();
+                            }
+                            @Html.DropDownListFor(template => template.ClrType, ddlValues, new { @class = "form-control" })
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="control-label col-sm-6">Alias: </label>
+                        <div class="form-control-static col-sm-6">
+                            @Html.TextBoxFor(template => template.Alias, new { @class = "form-control" })
+                        </div>
+                    </div>
+
+                    <button id="btnSubmit" type="submit" class="btn btn-primary" value="SubmitTemplate">Submit</button>
+                </form>
+            }
+        </div>
+    </div>
+
+    <!-- Right Side. -->
+    <div class="col-md-5">
+        <h2>Available Template</h2>
+        <!-- Search Box Markup. -->
+        <div class="form-group">
+            <label class="control-label col-sm-2" for="txtTmpSearch">Search:</label>
+            <div class="col-sm-6">
+                @Html.TextBox("txtTmpSearch", null, new { @class = "form-control", @Value = (ViewBag.TemplateSearchStr != null ? ViewBag.TemplateSearchStr : "") })
+            </div>
+            <div class="col-sm-3 btn-group">
+                <button type="button" class="btn btn-secondary form-control" onclick="ExecuteSearch(this)">Search</button>
+            </div>
+        </div>
+        <button type="button" class="btn btn-secondary pull-right" onclick="location.href='@Url.Action("ClearSearch", "ManageTemplateItem")'">Clear Search</button>
+        <script type="text/javascript">
+            function ExecuteSearch(sender){
+                var value = $('#txtTmpSearch').val();
+                var url = '@Url.Action("ExecuteSearch", "ManageTemplateItem")' + '\\?searchStr=' + value;
+                window.location = url;
+            }
+            var availableTags = @using (TemplateItemRepository repo = new TemplateItemRepository()) {
+                repo.BeginTransaction();
+                List<String> templateNames = repo.GetTemplateItemNames();
+                @(Html.Raw(Json.Encode(templateNames)));
+            };
+            $('#txtTmpSearch').autocomplete({
+                source: availableTags
+            });
+        </script>
+        <div id="tblTemplates" class="height: 100px;overflow-y: scroll;">
+                @if (ViewBag.TemplateItemPage != null) {
+                    if (ViewBag.TemplateItemPage.Count > 0) {
+                        <table id="tblTemplates" class="table table-striped">
+                            <tr>
+                                <th>Template Name</th>
+                                <th>Ordering</th>
+                                <th>Clr Type</th>
+                                <th>Remove</th>
+                            </tr>
+                            @foreach (TemplateItem template in ViewBag.TemplateItemPage) {
+                                <tr>
+                                    <td>@template.TemplateName</td>
+                                    <td>@template.Order</td>
+                                    <td>@template.ClrType</td>
+                                    <td>@template.Alias</td>
+                                    <td>
+                                        <button type="button" class="btn btn-primary" onclick="location.href='@Url.Action("Index", "ManageItemOption", new { templateId = template.TemplateId})'">Manage Options</button>
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-danger" onclick="location.href='@Url.Action("RemoveTemplate", "ManageTemplateItem", new { templateId = template.TemplateId})'">Remove</button>
+                                    </td>
+                                </tr>
+                            }
+                        </table>
+                    }
+                }
+            </div>
+        <div class="btn-group pull-right">
+            <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("TemplateFirstPage", "ManageTemplateItem")'">Begin</button>
+            <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("TemplatePreviousPage", "ManageTemplateItem")'">Previous</button>
+            <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("TemplateNextPage", "ManageTemplateItem")'">Next</button>
+            <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("TemplateLastPage", "ManageTemplateItem")'">Next</button>
+        </div>
+    </div>
+
+</div>

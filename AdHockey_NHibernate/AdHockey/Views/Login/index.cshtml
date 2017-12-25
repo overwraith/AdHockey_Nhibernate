@@ -1,0 +1,43 @@
+﻿<!-- Author: Cameron Block -->
+@model AdHockey.Models.Login
+
+@{
+    ViewBag.Title = "Login";
+}
+
+<div class="jumbotron">
+    <h1>Login</h1>
+    <p class="lead">Log into Cameron's AdHockey reporting engine. </p>
+</div>
+
+@using (Html.BeginForm("Login", "Login", new { @class = "form-horizontal" })) {
+    @Html.AntiForgeryToken()
+    @Html.ValidationSummary(true, "Login Failed. Check your login credentials. ", new { @style = "color:red"});
+    <div class="row">
+        <div class="col-md-5">
+            <div class="form-group">
+                @Html.LabelFor(login => login.EmailAddress, new { @class = "control-label col-sm-3" })
+                <div class="col-sm-9 form-control-static">
+                    @Html.TextBoxFor(login => login.EmailAddress, new { @class = "form-control" })
+                    @Html.ValidationMessageFor(login => login.EmailAddress)
+                </div>
+
+            </div>
+            <div class="form-group">
+                @Html.LabelFor(login => login.Password, new { @class = "control-label col-sm-3" })
+                <div class="col-sm-9 form-control-static">
+                    @Html.PasswordFor(login => login.Password, new { @class = "form-control" })
+                    @Html.ValidationMessageFor(login => login.Password)
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-sm-6 form-control-static">
+                    @Html.CheckBoxFor(login => login.RememberMe, new { @class = "form-control  col-sm-4" })
+                </div>
+                @Html.LabelFor(login => login.RememberMe, new { @class = "col-sm-4" })
+            </div>
+        </div>
+    </div>
+    <input type="submit" class="btn btn-primary" value="Log In" />
+}
+

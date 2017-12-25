@@ -1,0 +1,296 @@
+﻿<!-- Author: Cameron Block -->
+@using System;
+@using System.Collections.Generic;
+@using System.Configuration;
+
+@using AdHockey.Models;
+@using AdHockey.Repositories;
+
+@model Group
+
+@{
+    ViewBag.Title = "Add User to Group";
+}
+
+@Scripts.Render("~/Scripts/jquery-ui-1.12.1.min.js")
+
+<link href='@Url.Content("~/Content/themes/base/jquery-ui.css")' rel="stylesheet" type="text/css" />
+
+<style>
+    /* Scroll bar for the sql text. */
+    .scroll-bar {
+        width: 300px;
+        height: 100px;
+        overflow: scroll;
+    }
+</style>
+
+<div class="jumbotron">
+    <h1>Add User to Group</h1>
+    <p class="lead">Place users in groups. Entire groups can recieve reoprts. </p>
+</div>
+
+<div class="container">
+    <form method="post">
+        <!-- Left Side. -->
+        <div class="col-md-2">
+            <ul id="links">
+                <li><a href="@Url.Action("Index", "ManageBulkTemplate")">Manage Bulk Users</a></li>
+                <li><a href="@Url.Action("Index", "ManageLimiterItem")">Manage Limiter Users</a></li>
+                <li><a href="@Url.Action("Index", "ManageTemplateItem")">User Item</a></li>
+                <li><a href="@Url.Action("Index", "ManageReport")">Manage Reports</a></li>
+                <li><a href="@Url.Action("Index", "ManageGroup")">Manage Groups</a></li>
+                <li><a href="@Url.Action("Index", "ManageUser")">Manage Users</a></li>
+                <li><a href="@Url.Action("Index", "Home")">AdHoc Report</a></li>
+            </ul>
+        </div>
+
+        <!-- Center. -->
+        <div class="col-md-10">
+            <!-- Select Group. -->
+            <div class="row">
+                <h2>Select Group to Modify</h2>
+
+                <!-- Search box Markup. -->
+                <div class="form-horizontal">
+                    <div class="form-group">
+                        <label class="control-label col-sm-2" for="txtGroupSearch">Search: </label>
+                        <div class="col-sm-6">
+                            @Html.TextBox("txtGroupSearch", null, new { @class = "form-control", @Value = (ViewBag.GroupSearchStr != null ? ViewBag.GroupSearchStr : "") })
+                        </div>
+                        <div class="col-sm-3 btn-group">
+                            <button type="button" class="btn btn-secondary form-control" onclick="ExecuteSearch(this)">Search</button>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-secondary pull-right" onclick="location.href='@Url.Action("ClearSearch", "AddUserGroup")'">Clear Search</button>
+                <script type="text/javascript">
+                    function ExecuteSearch() {
+                        var value = $('#txtGroupSearch').val();
+                        var url = '@Url.Action("ExecuteSearch", "AddUserGroup")' + '\\?searchStr=' + value;
+                        window.location = url;
+                    }
+                    var availableTags = @using (GroupRepository repo = new GroupRepository()) {
+                        List<String> groupNames = repo.GetGroupNames();
+                        @(Html.Raw(Json.Encode(groupNames)));
+                    };
+                    $('#txtGroupSearch').autocomplete({
+                        source: availableTags
+                    });
+                </script>
+                <table id="tblGroups" class="table table-striped">
+                    <tr>
+                        <th></th>
+                        <th>Group Name</th>
+                        <th>Selected Group</th>
+                    </tr>
+                    @if (ViewBag.GroupPage != null) {
+                        for (int i = 0; i < ViewBag.GroupPage.Count; i++) {
+                            var group = ViewBag.GroupPage[i];
+                            <tr>
+                                <td>@Html.Hidden("hiddenGrpId", (object)group.GroupId)</td>
+                            <td>@group.GroupName</td>
+                            @if (ViewBag.CheckedGroupId == group.GroupId) {
+                                <td>@Html.CheckBox("chkGroup", true, new { onclick = "SelectionChanged(this);", name = "radioGroup", @checked = (ViewBag.CheckedGroupId == group.GroupId) ? true : false })</td>
+                            }
+                            else {
+                                <td>@Html.CheckBox("chkGroup", false, new { onclick = "SelectionChanged(this);", name = "radioGroup", @checked = (ViewBag.CheckedGroupId == group.GroupId) ? true : false })</td>
+                            }
+							</tr>
+                        }
+                    }
+                </table>
+                <div class="btn-group pull-right">
+                    <button type="submit" class="btn btn-primary" onclick="GroupFirstPage(this)">Begin</button>
+                    <button type="submit" class="btn btn-primary" onclick="GroupPreviousPage(this)">Previous</button>
+                    <button type="submit" class="btn btn-primary" onclick="GroupNextPage(this)">Next</button>
+                    <button type="submit" class="btn btn-primary" onclick="GroupLastPage(this)">Last</button>
+
+                    <script type="text/javascript">
+                        function GroupFirstPage(control) {
+                            var isChecked = control.checked;
+                            if (isChecked) {
+                                var value = $(control).closest('tr').find('#hiddenGrpId').val();
+                                var url = '@Url.Action("GroupFirstPage", "AddUserGroup")' + '\\?groupId=' + value;
+                                window.location = url;
+                            }
+                        }
+                        function GroupPreviousPage(control) {
+                            var isChecked = control.checked;
+                            if (isChecked) {
+                                var value = $(control).closest('tr').find('#hiddenGrpId').val();
+                                var url = '@Url.Action("GroupPreviousPage", "AddUserGroup")' + '\\?groupId=' + value;
+                                window.location = url;
+                            }
+                        }
+                        function GroupNextPage(control) {
+                            var isChecked = control.checked;
+                            if (isChecked) {
+                                var value = $(control).closest('tr').find('#hiddenGrpId').val();
+                                var url = '@Url.Action("GroupNextPage", "AddUserGroup")' + '\\?groupId=' + value;
+                                window.location = url;
+                            }
+                        }
+                        function GroupLastPage(control) {
+                            var isChecked = control.checked;
+                            if (isChecked) {
+                                var value = $(control).closest('tr').find('#hiddenGrpId').val();
+                                var url = '@Url.Action("GroupLastPage", "AddUserGroup")' + '\\?groupId=' + value;
+                                window.location = url;
+                            }
+                        }
+                    </script>
+                </div>
+                <script type="text/javascript">
+                    function SelectionChanged(sender) {
+                        //select closest hidden field which contains group id
+                        var isChecked = sender.checked;
+                        var value = $(sender).closest('tr').find('#hiddenGrpId').val();
+                        if (isChecked) {
+                            //build url to redirect to
+                            var url = '@Url.Action("SetDataSourceB", "AddUserGroup")' + '\\?groupId=' + value;
+                            window.location = url;
+                        }
+                        else {
+                            $('#hiddenDiv').addClass('hidden');
+                        }
+                    }//end function
+                </script>
+            </div>
+        </div>
+
+        <div id="hiddenDiv" class="@(Model == null ? "hidden" : "")" )>
+            <div class="row">
+
+                <!-- Available Users. -->
+                <div class="col-md-6">
+                    <!-- User list with button to add to group. Maybe an arrow button. -->
+                    <h3>Available Users</h3>
+                    <!-- Search box Markup. -->
+                    <div class="form-group">
+                        <label class="control-label col-sm-2" for="txtUserSearch">Search:</label>
+                        <div class="col-sm-6">
+                            @Html.TextBox("txtUserSearch", null, new { @class = "form-control", @Value = (ViewBag.UserSearchStr != null ? ViewBag.UserSearchStr : "")})
+                        </div>
+                        <div class="col-sm-3 btn-group">
+                            <button type="button" class="btn btn-secondary form-control" onclick="ExecuteUserSearch(this)">Search</button>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-secondary pull-right" onclick="location.href='@Url.Action("ClearUserSearch", "AddUserGroup")'">Clear Search</button>
+                    <script type="text/javascript">
+                        function ExecuteUserSearch() {
+                            var value = $('#txtUserSearch').val();
+                            var url = '@Url.Action("ExecuteUserSearch", "AddUserGroup")' + '\\?searchStr=' + value;
+                            window.location = url;
+                        }
+                        var availableTags = @using (UserRepository repo = new UserRepository()) {
+                            if (ViewBag.CheckedGroupId != null) {
+                                List<String> userNames = repo.GetUserNames();
+                                @(Html.Raw(Json.Encode(userNames)));
+                            }
+                            else {
+                                @Html.Raw("[];");
+                            }
+                        };
+                        $('#txtUserSearch').autocomplete({
+                            source: availableTags
+                        });
+                    </script>
+                    <table id="tblUsers" class="table table-striped">
+                        <tr>
+                            <th>First Name</th>
+                            <th>Last Name</th>
+                            <th>Add</th>
+                        </tr>
+                        @if (Model != null) {
+                            foreach (var usr in ViewBag.UserPage) {
+                                <tr>
+                                    <td>@usr.FirstName</td>
+                                    <td>@usr.LastName</td>
+                                    <td>
+                                        <button type="button" class="btn btn-primary" onclick="location.href='@Url.Action("AddUser", "AddUserGroup", new { userId = usr.UserId })'">Add User</button>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </table>
+                    <div class="btn-group pull-right">
+                        <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("UserFirstPage", "AddUserGroup")'">Begin</button>
+                        <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("UserPreviousPage", "AddUserGroup")'">Previous</button>
+                        <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("UserNextPage", "AddUserGroup")'">Next</button>
+                        <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("UserLastPage", "AddUserGroup")'">Last</button>
+                    </div>
+                </div>
+
+                <!-- Users in group. -->
+                <div class="col-md-6">
+                    <h3>Group Current Users</h3>
+                    <!-- Search box Markup. -->
+                    <div class="form-horizontal">
+                        <div class="form-group">
+                            <label class="control-label col-sm-2" for="txtUserSearch">Search:</label>
+                            <div class="col-sm-7">
+                                @Html.TextBox("txtGrpUsrSearch", null, new { @class = "form-control", @Value = (ViewBag.GrpUsrSearchStr != null ? ViewBag.GrpUsrSearchStr : "")})
+                            </div>
+                            <div class="col-sm-3">
+                                <button type="button" class="btn btn-secondary form-control" onclick="ExecuteGrpUsrSearch(this)">Search</button>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-secondary pull-right" onclick="location.href='@Url.Action("ClearGrpUsrSearch", "BindUserGroup")'">Clear Search</button>
+                    <script type="text/javascript">
+                        function ExecuteGrpUsrSearch() {
+                            var value = $('#txtGrpUserSearch').val();
+                            var url = '@Url.Action("ExecuteGrpUsrSearch", "AddUserGroup")' + '\\?searchStr=' + value;
+                            window.location = url;
+                        }
+                        var availableTags = @using (UserRepository repo = new UserRepository()) {
+                            if (ViewBag.CheckedGroupId != null) {
+                                List<String> userNames = repo.GetGroupUserNames(ViewBag.CheckedGroupId);
+                                @(Html.Raw(Json.Encode(userNames)));
+                            }
+                            else {
+                                @Html.Raw("[];");
+                            }
+                        };
+                        $('#txtGrpUsrSearch').autocomplete({
+                            source: availableTags
+                        });
+                    </script>
+                    <table id="tblGrpUsers" class="table table-striped">
+                        <tr>
+                            <th>First Name</th>
+                            <th>Last Name</th>
+                            <th>Remove</th>
+                        </tr>
+                        @if (Model != null) {
+                            if (ViewBag.GroupUserPage != null) {
+                                foreach (var usr in ViewBag.GroupUserPage) {
+                                <tr>
+                                    <td>@usr.FirstName</td>
+                                    <td>@usr.LastName</td>
+                                    <td>
+                                        <button type="button" class="btn btn-danger" onclick="location.href='@Url.Action("RemoveUser", "AddUserGroup", new { userId = usr.UserId })'">Remove User</button>
+                                    </td>
+                                </tr>
+                                    }
+                                }
+                            }
+                    </table>
+                    <div class="btn-group pull-right">
+                        <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("UsrGrpFirstPage", "AddUserGroup")'">Begin</button>
+                        <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("UsrGrpPreviousPage", "AddUserGroup")'">Previous</button>
+                        <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("UsrGrpNextPage", "AddUserGroup")'">Next</button>
+                        <button type="submit" class="btn btn-primary" onclick="location.href='@Url.Action("UsrGrpLastPage", "AddUserGroup")'">Last</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script type="text/javascript">
+            function GetIds(sender) {
+                var ids = $(sender).closest(input[type = "text"])[0].val();
+                alert(ids);
+            }
+        </script>
+    </form>
+</div>
