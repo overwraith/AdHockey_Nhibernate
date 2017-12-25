@@ -1,0 +1,53 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<hibernate-mapping xmlns="urn:nhibernate-mapping-2.2" auto-import="true">
+  <class name="AdHockey.Models.Profile, AdHockey" table="&quot;PROFILE&quot;" lazy="false" schema="cblock">
+    <id name="ProfileId" access="property" type="int" column="PROFILE_ID">
+      <generator class="native"/>
+    </id>
+    <property name="ProfileName" access="property" column="PROFILE_NAME" length="64" />
+
+    <!-- One to many relationship with the whitelists and black lists. -->
+    <!--<bag name="AuthorizedFields" access="property" cascade="all" lazy="false" inverse="true">
+      <key>
+        <column name="PROFILE_ID" />
+      </key>
+      <one-to-many class="AdHockey.Models.AuthorizedField, AdHockey" />
+    </bag>-->
+
+    <bag name="AuthorizedTables" access="property" cascade="all" lazy="false" inverse="true">
+      <key>
+        <column name="PROFILE_ID" />
+      </key>
+      <one-to-many class="AdHockey.Models.AuthorizedTable, AdHockey" />
+    </bag>
+
+    <bag name="AuthorizedSchemas" access="property" cascade="all" lazy="false" inverse="true">
+      <key>
+        <column name="PROFILE_ID" />
+      </key>
+      <one-to-many class="AdHockey.Models.AuthorizedSchema, AdHockey" />
+    </bag>
+
+    <bag name="RestrictedFields" access="property" cascade="all" lazy="false" inverse="true">
+      <key>
+        <column name="PROFILE_ID" />
+      </key>
+      <one-to-many class="AdHockey.Models.RestrictedField, AdHockey" />
+    </bag>
+
+    <bag name="RestrictedTables" access="property" cascade="all" lazy="false" inverse="true">
+      <key>
+        <column name="PROFILE_ID" />
+      </key>
+      <one-to-many class="AdHockey.Models.RestrictedTable, AdHockey" />
+    </bag>
+
+    <bag name="RestrictedSchemas" access="property" cascade="all" lazy="false" inverse="true">
+      <key>
+        <column name="PROFILE_ID" />
+      </key>
+      <one-to-many class="AdHockey.Models.RestrictedSchema, AdHockey" />
+    </bag>
+
+  </class>
+</hibernate-mapping>

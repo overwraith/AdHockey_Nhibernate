@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<hibernate-mapping xmlns="urn:nhibernate-mapping-2.2" auto-import="true">
+  <class schema="cblock" lazy="false" name="AdHockey.Models.TemplateItem, AdHockey" table="&quot;TEMPLATE_ITEM&quot;">
+    <id name="TemplateId" access="property" type="int" column="TEMPLATE_ID" >
+      <generator class="native"/>
+    </id>
+
+    <property name="ClassName" access="readonly" column="CLASS_NAME" length="64" />
+    <property name="AssemblyName" access="readonly" column="ASSEMBLY_NAME" length="64" />
+    <property name="TemplateName" access="property" column="TEMPLATE_NAME" length="64" />
+    <property name="Order" access="property" type="int" column="&quot;ORDER&quot;" />
+    <property name="ClrType" access="property" column="CLR_TYPE" />
+    <property name="Alias" access="property" column="ALIAS" />
+    <property name="ControlName" access="property" column="CONTROL_NAME" length="64" />
+
+    <property name="ReportId" access="property" column="REPORT_ID" insert="false" update="false" />
+    <many-to-one name="Report" access="property" column="REPORT_ID"/>
+
+    <bag name="Options" access="property" cascade="all-delete-orphan" lazy="false" inverse="true">
+      <key>
+        <column name="TEMPLATE_ID" />
+      </key>
+      <one-to-many class="AdHockey.Models.Option, AdHockey" />
+    </bag>
+    
+  </class>
+</hibernate-mapping>

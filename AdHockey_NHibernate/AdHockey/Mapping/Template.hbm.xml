@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<hibernate-mapping xmlns="urn:nhibernate-mapping-2.2" auto-import="true">
+  <class schema="cblock" lazy="false" name="AdHockey.Models.Template, AdHockey" table="&quot;TEMPLATE&quot;" >
+    <id name="TemplateId" access="property" type="int" column="TEMPLATE_ID" >
+      <generator class="native"/>
+    </id>
+    <property name="ClassName" access="readonly" column="CLASS_NAME" length="64" />
+    <property name="AssemblyName" access="readonly" column="ASSEMBLY_NAME" length="64" />
+    <property name="TemplateName" access="property" column="TEMPLATE_NAME" length="64" />
+    <property name="Order" access="property" type="int" column="&quot;ORDER&quot;" />
+    <property name="ReportId" access="property" type="int" column="REPORT_ID" />
+    <many-to-one name="Report" access="property" column="REPORT_ID"/>
+  </class>
+</hibernate-mapping>

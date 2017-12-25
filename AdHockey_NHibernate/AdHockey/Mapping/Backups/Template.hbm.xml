@@ -1,0 +1,50 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<hibernate-mapping xmlns="urn:nhibernate-mapping-2.2" auto-import="true">
+  <class schema="cblock" lazy="false" name="AdHockey.Models.Template, AdHockey" table="&quot;TEMPLATE&quot;" abstract="true">
+    <id name="TemplateId" access="property" type="int" column="TEMPLATE_ID" >
+      <generator class="native"/>
+    </id>
+    <discriminator column="CLASS_NAME" type="string"/>
+    
+    <property name="ClassName" access="readonly" column="CLASS_NAME" length="64" />
+    <property name="AssemblyName" access="readonly" column="ASSEMBLY_NAME" length="64" />
+    <property name="TemplateName" access="property" column="TEMPLATE_NAME" length="64" />
+    <property name="Order" access="property" type="int" column="&quot;ORDER&quot;" />
+    <property name="ReportId" access="property" type="int" column="REPORT_ID" />
+    <many-to-one name="Report" access="property" column="REPORT_ID" cascade="all"/>
+
+    <joined-subclass name="AdHockey.Models.BulkTemplate, AdHockey" table="BULK_TEMPLATE">
+      <key column="TEMPLATE_ID" />
+      <property name="ClrType" access="property" type="int" column="CLR_TYPE" />
+      <property name="ValueDescriptor" access="property" type="int" column="VALUE_DESCRIPTOR" />
+    </joined-subclass>
+    <joined-subclass name="AdHockey.Models.LimiterItem, AdHockey" table="LIMITER_ITEM">
+      <key column="TEMPLATE_ID" />
+    </joined-subclass>
+    <joined-subclass name="AdHockey.Models.TemplateItem, AdHockey" table="TEMPLATE_ITEM">
+      <key column="TEMPLATE_ID" />
+      <property name="ClrType" access="property" column="CLR_TYPE" />
+      <property name="Alias" access="property" column="ALIAS" />
+    </joined-subclass>
+  
+    <!--<subclass name="AdHockey.Models.BulkTemplate, AdHockey" discriminator-value="AdHockey.BulkTemplate">
+      <join table="BULK_TEMPLATE">
+        <key column="TEMPLATE_ID" />
+        <property name="ClrType" access="property" type="int" column="CLR_TYPE" />
+        <property name="ValueDescriptor" access="property" type="int" column="VALUE_DESCRIPTOR" />
+      </join>
+    </subclass>
+    <subclass name="AdHockey.Models.LimiterItem, AdHockey" discriminator-value="AdHockey.LimiterItem">
+      <join table="LIMITER_ITEM" >
+        <key column="TEMPLATE_ID" />
+      </join>
+    </subclass>
+    <subclass name="AdHockey.Models.TemplateItem, AdHockey" discriminator-value="TemplateItem">
+      <join table="TEMPLATE_ITEM">
+        <key column="TEMPLATE_ID" />
+        <property name="ClrType" access="property" column="CLR_TYPE" />
+        <property name="Alias" access="property" column="ALIAS" />
+      </join>
+    </subclass>-->
+  </class>
+</hibernate-mapping>

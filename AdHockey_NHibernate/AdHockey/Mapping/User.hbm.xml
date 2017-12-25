@@ -1,0 +1,35 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<hibernate-mapping xmlns="urn:nhibernate-mapping-2.2" auto-import="true">
+  <class name="AdHockey.Models.User, AdHockey" table="&quot;USER&quot;" lazy="false" schema="cblock">
+    <id name="UserId" access="property" type="int" column="USER_ID">
+      <generator class="native"/>
+    </id>
+    
+    <property name="FirstName" access="property" column="FIRST_NAME" length="64" />
+    <property name="LastName" access="property" column="LAST_NAME" length="64" />
+    <property name="PasswordHash" access="property" column="PASSWORD_HASH" length="256" />
+
+    <property name="TelephoneNumber" access="property" column="TELEPHONE_NUM" length="12" />
+    <property name="EmailAddress" access="property" column="EMAIL_ADDRESS" length="64" />
+    
+    <!-- IsActive property used for locking accounts. -->
+    <property name="IsActive" access="property" column="IS_ACTIVE" length="64" />
+
+     <!--Many to many relationship with user table.--> 
+    <bag name="Groups" access="property" lazy="false" table="GRP_USR_BRIDGE" cascade="none" schema="cblock" inverse="false">
+      <key>
+        <column name="USER_ID" />
+      </key>
+      <many-to-many column="GROUP_ID" class="AdHockey.Models.Group, AdHockey" />
+    </bag>
+
+     <!--Many to many relationship with user table.--> 
+    <bag name="Reports" access="property" lazy="false" table="RPT_USR_BRIDGE" schema="cblock" inverse="false">
+      <key>
+        <column name="USER_ID" />
+      </key>
+      <many-to-many column="REPORT_ID" class="AdHockey.Models.Report, AdHockey" />
+    </bag>
+
+  </class>
+</hibernate-mapping>

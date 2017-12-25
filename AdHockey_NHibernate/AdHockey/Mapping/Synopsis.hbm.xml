@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<hibernate-mapping xmlns="urn:nhibernate-mapping-2.2" auto-import="true">
+  <class name="AdHockey.Models.Synopsis, AdHockey" table="&quot;SYNOPSIS&quot;" lazy="false" schema="cblock">
+    <id name="SynopsisId" access="property" type="int" column="SYNOPSIS_ID">
+      <generator class="native"/>
+    </id>
+
+    <property name="RecommenderFirstName" access="property" column="RECCOMENDER_FIRST_NAME" length="64"/>
+    <property name="RecommenderLastName" access="property" column="RECCOMENDER_LAST_NAME" length="64"/>
+    <property name="ReccomenderTelephoneNum" access="property" column="RECCOMENDER_TELEPHONE_NUM" length="12"/>
+
+    <property name="ImplementerFirstName" access="property" column="RECCOMENDER_FIRST_NAME" length="64"/>
+    <property name="ImplementerLastName" access="property" column="RECCOMENDER_LAST_NAME" length="64"/>
+    <property name="ImplementerTelephoneNum" access="property" column="RECCOMENDER_TELEPHONE_NUM" length="12"/>
+    
+    <property name="DateCreated" access="property" column="DATE_CREATED" />
+    <property name="BusinessCase" access="property" column="BUSINESS_CASE" type="StringClob" />
+
+    <property name="ReportId" access="property" column="REPORT_ID" insert="false" update="false" />
+    <many-to-one name="Report" access="property" column="REPORT_ID"/>
+  </class>
+</hibernate-mapping>

@@ -1,0 +1,96 @@
+﻿DECLARE
+    CH NUMBER(3, 0) := 65;
+BEGIN
+    FOR I IN 1..26 LOOP
+        INSERT INTO REPORT_A (
+            TOGGLE, 
+            CREATE_DATE, 
+            DATA_A, 
+            DATA_B, 
+            DATA_C
+        ) VALUES (
+            1, 
+            SYSDATE + 5,
+            'DATA TO BE RETRIEVED ' || C
+			(CH), 
+            'DATA TO BE RETRIEVED ' || CHR(CH), 
+            'DATA TO BE RETRIEVED ' || CHR(CH)
+        );
+        CH := CH + 1;
+    END LOOP;
+END;
+/
+SELECT * FROM REPORT_A;
+/
+DELETE FROM REPORT_A;
+/
+DROP TABLE REPORT_A;
+/
+--CREATE EXAMPLE TABLE TO QUERY FOR REPORTING ENGINE
+CREATE TABLE REPORT_A(
+    REPORT_KEY NUMBER(10, 0) PRIMARY KEY, 
+    TOGGLE NUMBER(1), 
+    CREATE_DATE DATE, 
+    DATA_A VARCHAR2(60), 
+    DATA_B VARCHAR2(60), 
+    DATA_C VARCHAR2(60)
+);
+
+DROP SEQUENCE REPORT_A_SEQ;
+
+CREATE SEQUENCE REPORT_A_SEQ START WITH 1;
+
+CREATE OR REPLACE TRIGGER REPORT_A_TRG 
+BEFORE INSERT ON REPORT_A 
+FOR EACH ROW
+BEGIN
+	:NEW.REPORT_KEY := REPORT_A_SEQ.NEXTVAL;
+END;
+-----------------------------------------------------------------------------------------------------------------------
+DECLARE
+    CH NUMBER(3, 0) := 65;
+BEGIN
+    FOR I IN 1..26 LOOP
+        INSERT INTO REPORT_B (
+            TOGGLE, 
+            CREATE_DATE, 
+            DATA_A, 
+            DATA_B, 
+            DATA_C
+        ) VALUES (
+            1, 
+            SYSDATE + 5,
+            'DATA TO BE RETRIEVED ' || CHR(CH), 
+            'DATA TO BE RETRIEVED ' || CHR(CH), 
+            'DATA TO BE RETRIEVED ' || CHR(CH)
+        );
+        CH := CH + 1;
+    END LOOP;
+END;
+/
+SELECT * FROM REPORT_B;
+/
+DELETE FROM REPORT_B;
+/
+DROP TABLE REPORT_B;
+/
+--CREATE EXAMPLE TABLE TO QUERY FOR REPORTING ENGINE
+CREATE TABLE REPORT_B(
+    REPORT_KEY NUMBER(10, 0) PRIMARY KEY, 
+    TOGGLE NUMBER(1), 
+    CREATE_DATE DATE, 
+    DATA_A VARCHAR2(60), 
+    DATA_B VARCHAR2(60), 
+    DATA_C VARCHAR2(60)
+);
+
+DROP SEQUENCE REPORT_B_SEQ;
+
+CREATE SEQUENCE REPORT_B_SEQ START WITH 1;
+
+CREATE OR REPLACE TRIGGER REPORT_B_TRG 
+BEFORE INSERT ON REPORT_B 
+FOR EACH ROW
+BEGIN
+	:NEW.REPORT_KEY := REPORT_B_SEQ.NEXTVAL;
+END;

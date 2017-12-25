@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<hibernate-mapping xmlns="urn:nhibernate-mapping-2.2" auto-import="true">
+  <class name="AdHockey.Models.AuthorizedTable, AdHockey" table="&quot;AUTHORIZED_TABLE&quot;" lazy="false" schema="cblock">
+    <id name="FieldId" access="property" type="int" column="FIELD_ID">
+      <generator class="native"/>
+    </id>
+    <property name="GroupId" access="property" column="GROUP_ID" insert="false" update="false"/>
+    <property name="SchemaName" access="property" column="SCHEMA_NAME" length="64" />
+    <property name="TableName" access="property" column="TABLE_NAME" length="64" />
+    <property name="Description" access="property" column="&quot;DESCRIPTION&quot;" length="256"/>
+
+    <many-to-one name="Group" access="property" column="GROUP_ID"/>
+  </class>
+</hibernate-mapping>

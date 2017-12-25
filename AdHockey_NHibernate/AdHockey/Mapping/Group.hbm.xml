@@ -1,0 +1,72 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<hibernate-mapping xmlns="urn:nhibernate-mapping-2.2" auto-import="true">
+  <class name="AdHockey.Models.Group, AdHockey" table="&quot;GROUP&quot;" lazy="false" schema="cblock">
+    <id name="GroupId" access="property" type="int" column="GROUP_ID">
+      <generator class="native"/>
+    </id>
+    <property name="GroupName" access="property" column="GROUP_NAME" length="64" />
+    <property name="Description" access="property" column="&quot;DESCRIPTION&quot;" length="256" />
+
+    <!-- Many to many relationship with user table. -->
+    <bag name="Users" access="property" lazy="false" table="GRP_USR_BRIDGE" cascade="none" schema="cblock" inverse="false">
+      <key>
+        <column name="GROUP_ID" />
+      </key>
+      <many-to-many column="USER_ID" class="AdHockey.Models.User, AdHockey" />
+    </bag>
+
+    <!-- Many to many relationship with user table. -->
+    <bag name="Reports" access="property" table="RPT_GRP_BRIDGE" cascade="none" schema="cblock" inverse="false">
+      <key>
+        <column name="GROUP_ID" />
+      </key>
+      <many-to-many column="REPORT_ID" class="AdHockey.Models.Report, AdHockey" />
+    </bag>
+    
+    <!-- Groups have a one to many relationship with Authorized/Restricted fields. -->
+    <!--<bag name="AuthorizedFields" access="property" cascade="none" lazy="false" inverse="true">
+      <key>
+        <column name="GROUP_ID" />
+      </key>
+      <one-to-many class="AdHockey.Models.AuthorizedField, AdHockey" />
+    </bag>-->
+
+    <bag name="RestrictedFields" access="property" cascade="none" lazy="false" inverse="true">
+      <key>
+        <column name="GROUP_ID" />
+      </key>
+      <one-to-many class="AdHockey.Models.RestrictedField, AdHockey" />
+    </bag>
+
+    <!-- Groups have a one to many relationship with Authorized/Restricted tables. -->
+    <bag name="AuthorizedTables" access="property" cascade="none" lazy="false" inverse="true">
+      <key>
+        <column name="GROUP_ID" />
+      </key>
+      <one-to-many class="AdHockey.Models.AuthorizedTable, AdHockey" />
+    </bag>
+
+    <bag name="RestrictedTables" access="property" cascade="none" lazy="false" inverse="true">
+      <key>
+        <column name="GROUP_ID" />
+      </key>
+      <one-to-many class="AdHockey.Models.RestrictedTable, AdHockey" />
+    </bag>
+
+    <!-- Groups have a one to many relationship with Authorized/Restricted tables. -->
+    <bag name="AuthorizedSchemas" access="property" cascade="none" lazy="false" inverse="true">
+      <key>
+        <column name="GROUP_ID" />
+      </key>
+      <one-to-many class="AdHockey.Models.AuthorizedSchema, AdHockey" />
+    </bag>
+
+    <bag name="RestrictedSchemas" access="property" cascade="none" lazy="false" inverse="true">
+      <key>
+        <column name="GROUP_ID" />
+      </key>
+      <one-to-many class="AdHockey.Models.RestrictedSchema, AdHockey" />
+    </bag>
+
+  </class>
+</hibernate-mapping>

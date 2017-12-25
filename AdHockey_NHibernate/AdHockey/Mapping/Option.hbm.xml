@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<hibernate-mapping xmlns="urn:nhibernate-mapping-2.2" auto-import="true">
+  <class schema="cblock" lazy="false" name="AdHockey.Models.Option, AdHockey" table="&quot;OPTION&quot;" >
+    <id name="OptionId" access="property" type="int" column="OPTION_ID" >
+      <generator class="native"/>
+    </id>
+    <property name="TemplateId" access="property" column="TEMPLATE_ID" />
+    <property name="OptionValue" access="property" column="OPT_VALUE" />
+    <property name="OptionTransform" access="property" column="OPT_TRANS" length="1" />
+
+    <many-to-one name="Template" access="property" column="TEMPLATE_ID"/>
+  </class>
+</hibernate-mapping>

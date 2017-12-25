@@ -1,0 +1,13 @@
+﻿[
+  {
+    "outputFileName": "wwwroot/Scripts/HomeController.min.js",
+    "inputFiles": [
+      "wwwroot/js/site.js"
+    ],
+    "minify": {
+      "enabled": true,
+      "renameLocals": true
+    },
+    "sourceMap": false
+  }
+]

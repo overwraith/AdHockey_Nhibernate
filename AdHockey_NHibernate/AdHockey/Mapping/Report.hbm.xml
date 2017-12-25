@@ -1,0 +1,63 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<hibernate-mapping xmlns="urn:nhibernate-mapping-2.2" auto-import="true">
+  <class name="AdHockey.Models.Report, AdHockey" table="&quot;REPORT&quot;" lazy="false" schema="cblock">
+    <id name="ReportId" access="property" type="int" column="REPORT_ID">
+      <generator class="native"/>
+    </id>
+    <property name="ReportName" access="property" column="REPORT_NAME" length="64" />
+    <property name="Description" access="property" column="&quot;DESCRIPTION&quot;" type="StringClob" />
+    <property name="Sql" access="property" column="&quot;SQL&quot;" type="StringClob" />
+    <property name="ExportType" access="property" column="EXPORT_TYPE" />
+
+    <!-- One to many relationship with User table. -->
+    <bag name="BulkTemplates" access="property" cascade="all" lazy="false" inverse="true"> 
+      <!-- inverse="true"-->
+      <key>
+        <column name="REPORT_ID" />
+      </key>
+      <one-to-many class="AdHockey.Models.BulkTemplate, AdHockey" />
+    </bag>
+    
+    <bag name="LimiterItems" access="property" cascade="all" lazy="false" inverse="true">
+      <!-- inverse="true"-->
+      <key>
+        <column name="REPORT_ID" />
+      </key>
+      <one-to-many class="AdHockey.Models.LimiterItem, AdHockey" />
+    </bag>
+    
+    <bag name="TemplateItems" access="property" cascade="all" lazy="false" inverse="true">
+      <!-- inverse="true"-->
+      <key>
+        <column name="REPORT_ID" />
+      </key>
+      <one-to-many class="AdHockey.Models.TemplateItem, AdHockey" />
+    </bag>
+
+    <!-- Many to many relationship with user table. -->
+    <bag name="Users" access="property" table="RPT_USR_BRIDGE" schema="cblock" inverse="true">
+      <key>
+        <column name="REPORT_ID" />
+      </key>
+      <many-to-many column="USER_ID" class="AdHockey.Models.User, AdHockey" />
+    </bag>
+
+    <!-- Many to many relationship with group table. -->
+    <bag name="Groups" access="property" table="RPT_GRP_BRIDGE" cascade="none" schema="cblock" inverse="false">
+      <key>
+        <column name="REPORT_ID" />
+      </key>
+      <many-to-many column="GROUP_ID" class="AdHockey.Models.Group, AdHockey" />
+    </bag>
+    
+    <!-- Synopses objects. -->
+    <bag name="Synopses" access="property" cascade="all" lazy="false" inverse="true">
+      <!-- inverse="true"-->
+      <key>
+        <column name="REPORT_ID" />
+      </key>
+      <one-to-many class="AdHockey.Models.Synopsis, AdHockey" />
+    </bag>
+    
+  </class>
+</hibernate-mapping>
